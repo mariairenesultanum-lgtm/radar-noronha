@@ -1,0 +1,1306 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Radar Noronha · Além Mar</title><meta name="theme-color" content="#1a5c2a"><link rel="stylesheet" href="radar.css"><script src="d3.min.js"></script><script src="radar-shim.js"></script></head><body><div id="dash-root"><style>
+  /* Além Mar: verde #1a5c2a + laranja #e8650a. Faixa institucional verde no topo, menu lateral, conteúdo em cartões. */
+  #dash-root {
+    --am-green: #1a5c2a; --am-green-band: #1a5c2a; --am-green-soft: rgba(26, 92, 42, .10);
+    --am-orange: #e8650a; --am-orange-soft: rgba(232, 101, 10, .12); --am-on-band: #ffffff; --am-band-muted: rgba(255, 255, 255, .78);
+    --am-nav: #2f6f8f;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #dash-root { --am-green: #6cc07c; --am-green-band: #17492a; --am-green-soft: rgba(108, 192, 124, .14); --am-orange: #ff8f45; --am-orange-soft: rgba(255, 143, 69, .16); --am-nav: #7fb8d6; } }
+  :root[data-theme="dark"] #dash-root { --am-green: #6cc07c; --am-green-band: #17492a; --am-green-soft: rgba(108, 192, 124, .14); --am-orange: #ff8f45; --am-orange-soft: rgba(255, 143, 69, .16); --am-nav: #7fb8d6; }
+
+  .am { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cds-gap-lg); font-family: var(--font-anthropic-sans); }
+  .am-shell > main, .am-side { min-width: 0; }
+  .am b { font-weight: 600; }
+  .am-band { background: var(--am-green-band); color: var(--am-on-band); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); border-bottom: 4px solid var(--am-orange); }
+  .am-brandrow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cds-gap-md); }
+  .am-brand { display: grid; gap: 2px; }
+  .am-brandbox { display: flex; align-items: center; gap: var(--cds-gap-md); }
+  .am-logo { background: #fff; border-radius: 10px; padding: 6px 10px; display: grid; place-items: center; }
+  .am-logo img { height: 56px; width: auto; display: block; }
+  .am-band a { color: var(--am-on-band); }
+  .am-eyebrow { font-size: var(--cds-font-size-caption); letter-spacing: .14em; text-transform: uppercase; color: var(--am-band-muted); font-weight: 600; }
+  .am-band h1 { margin: 0; font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); color: var(--am-on-band); }
+  .am-take { margin: 0; font-size: var(--cds-font-size-body); max-width: 78ch; color: var(--am-on-band); }
+  .am-meta { margin: 0; font-size: var(--cds-font-size-caption); color: var(--am-band-muted); }
+  .am-mode { display: inline-flex; background: rgba(255, 255, 255, .12); border-radius: 999px; padding: 3px; }
+  .am-mode button { font: inherit; font-size: var(--cds-font-size-caption); border: 0; background: none; color: var(--am-on-band); padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+  .am-mode button[aria-pressed="true"] { background: var(--am-orange); color: #fff; font-weight: 600; }
+
+  .am-shell { display: grid; gap: var(--cds-gap-lg); grid-template-columns: 1fr; }
+  @media (min-width: 960px) { .am-shell { grid-template-columns: 12.5rem minmax(0, 1fr); align-items: start; } .am-side { position: sticky; top: var(--cds-gap-md); } .am-nav { flex-direction: column; } }
+  .am-nav { display: flex; gap: 2px; overflow-x: auto; }
+  .am-nav button { font: inherit; text-align: left; font-size: var(--cds-font-size-body); background: none; border: 0; border-left: 3px solid transparent; padding: var(--cds-pad-sm) var(--cds-pad-md); color: var(--color-fg-muted); cursor: pointer; border-radius: 0 var(--cds-radius) var(--cds-radius) 0; white-space: nowrap; }
+  .am-nav button:hover { background: var(--am-green-soft); color: var(--color-fg); }
+  .am-nav button[aria-selected="true"] { border-left-color: var(--am-orange); background: var(--am-green-soft); color: var(--color-fg); font-weight: 600; }
+  .am-sidenote { margin-top: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); display: none; }
+  @media (min-width: 960px) { .am-sidenote { display: block; } }
+  .am button:focus-visible, .am select:focus-visible, .am input:focus-visible { outline: 2px solid var(--am-orange); outline-offset: 2px; }
+
+  .am-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cds-gap-md); min-width: 0; }
+  .am-ph { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--cds-gap-md); }
+  .am-ph h2 { margin: 0; font-size: var(--cds-font-size-title); font-family: var(--font-anthropic-serif); font-weight: 400; }
+  .am-ph p { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); max-width: 70ch; }
+  .am-grid { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); align-items: start; }
+  .am-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; display: grid; gap: var(--cds-gap-sm); align-content: start; }
+  .am-card h3 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+  .am-note { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .am-chart { position: relative; min-height: 230px; }
+  .am-map { position: relative; min-height: 340px; }
+  .am-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; z-index: 3; }
+  .am-tip .k { color: var(--cds-text-secondary); }
+
+  .am-tiles { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)); }
+  .am-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); display: grid; gap: 3px; align-content: start; }
+  .am-tile.hl { border-color: var(--am-green); box-shadow: inset 0 3px 0 var(--am-green); }
+  .am-tile .lab { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .am-tile .val { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .am-tile .dlt { font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .am-tile .def { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .am-tag { justify-self: start; font-size: 11px; letter-spacing: .02em; padding: 1px 7px; border-radius: 4px; background: var(--am-green-soft); color: var(--am-green); font-weight: 600; }
+  .am-tag.sum { background: var(--am-orange-soft); color: var(--am-orange); }
+  .am-tag.now { background: transparent; color: var(--color-fg-muted); border: 1px solid var(--color-border-line); }
+  .am-good { color: var(--color-ok); } .am-bad { color: var(--color-bad); } .am-neutral { color: var(--color-fg-muted); }
+
+  .am-badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 1px 5px; border-radius: 3px; background: var(--am-orange); color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .am-pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--cds-font-size-caption); border: 1px solid currentColor; white-space: nowrap; }
+  .am-pill.nav { color: var(--am-nav); } .am-pill.fun { color: var(--color-warn); } .am-pill.atr { color: var(--am-green); }
+  .am-pill.est { color: var(--color-fg-muted); border-style: dashed; } .am-pill.prog { color: var(--am-orange); } .am-pill.ok { color: var(--am-green); } .am-pill.none { color: var(--color-fg-muted); }
+  .am-alert { color: var(--color-bad); font-size: var(--cds-font-size-caption); }
+  .am-sub { display: block; color: var(--color-fg-muted); font-size: 11px; white-space: normal; }
+
+  .am-tablebox { overflow: auto; max-height: 34rem; }
+  .am table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .am th { text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); position: sticky; top: 0; background: var(--color-panel); white-space: nowrap; z-index: 1; }
+  .am th.num, .am td.num { text-align: right; }
+  .am th button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+  .am td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); vertical-align: top; }
+  .am td.name { font-weight: var(--cds-font-weight-medium); white-space: nowrap; }
+  .am tr.am-row-am td { background: var(--am-green-soft); }
+  .am tr.am-row-am td:first-child { box-shadow: inset 3px 0 0 var(--am-green); }
+
+  .am-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-sm); }
+  .am-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: hidden; }
+  .am-seg button { font: inherit; font-size: var(--cds-font-size-caption); background: none; border: 0; padding: var(--cds-pad-xs) var(--cds-pad-md); color: var(--color-fg-muted); cursor: pointer; }
+  .am-seg button[aria-pressed="true"] { background: var(--am-green); color: var(--color-bg); font-weight: 600; }
+  .am-input { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); min-width: 0; }
+  .am-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .am-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .am-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .am-sq { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  .am-trip { display: grid; gap: 6px; padding-block: var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); }
+  .am-trip:last-child { border-bottom: 0; }
+  .am-trip-h { display: flex; justify-content: space-between; gap: var(--cds-gap-sm); flex-wrap: wrap; font-size: var(--cds-font-size-caption); }
+  .am-track { position: relative; height: 12px; border-radius: 6px; background: var(--cds-chart-grid); }
+  .am-win { position: absolute; top: 0; bottom: 0; background: var(--am-green-soft); border-left: 2px solid var(--am-green); border-right: 2px solid var(--am-green); }
+  .am-now { position: absolute; top: -3px; width: 4px; height: 18px; border-radius: 2px; background: var(--am-nav); }
+  .am-now.late { background: var(--color-bad); }
+  .am-trip-f { display: flex; justify-content: space-between; font-size: 11px; color: var(--color-fg-muted); }
+
+  .am-method { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); display: grid; gap: var(--cds-gap-sm); max-width: 82ch; }
+  .am-method p { margin: 0; } .am-method h4 { margin: var(--cds-gap-sm) 0 0; color: var(--color-fg); font-size: var(--cds-font-size-body); font-weight: 600; }
+  .am-hero { border-color: var(--am-green); box-shadow: inset 0 3px 0 var(--am-green); }
+  .am-man-grid { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
+  .am-man-col { display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; }
+  .am-man-col h4 { margin: 0; font-size: var(--cds-font-size-body); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .am-man-list { display: grid; gap: var(--cds-gap-sm); }
+  .am-man { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); display: grid; gap: 3px; background: var(--color-bg); min-width: 0; }
+  .am-man.am-is { border-color: var(--am-orange); box-shadow: inset 3px 0 0 var(--am-orange); }
+  .am-man-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .am-man-name { font-weight: 600; }
+  .am-man-time { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-title); line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .am-man-time.none { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-body); color: var(--color-fg-muted); line-height: 1.4; }
+  .am-man-rel { font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .am-man-meta { font-size: 11px; color: var(--color-fg-muted); }
+  .am-mapwrap { display: grid; gap: var(--cds-gap-md); grid-template-columns: 1fr; }
+  @media (min-width: 760px) { .am-mapwrap { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); } }
+  .am-porto { min-height: 340px; }
+  .am-fail { display: flex; align-items: center; justify-content: center; gap: 6px; height: 100%; min-height: inherit; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .am-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+  .am-empty { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); padding: var(--cds-pad-sm) 0; }
+  [data-dash-source-state=empty] { color: transparent; }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+  /* ---------- celular ---------- */
+  .am-hint-touch { display: none; }
+  @media (hover: none) { .am-hint-mouse { display: none; } .am-hint-touch { display: inline; } }
+  @media (max-width: 959px) {
+    .am-side { position: sticky; top: 0; z-index: 4; background: var(--color-bg); margin-inline: calc(-1 * var(--cds-pad-sm)); padding: 6px var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); }
+    .am-nav { gap: 6px; scrollbar-width: none; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+    .am-nav::-webkit-scrollbar { display: none; }
+    .am-nav button { border-left: 0; border: 1px solid var(--color-border-line); border-radius: 999px; padding: 8px 14px; font-size: var(--cds-font-size-caption); scroll-snap-align: start; min-height: 38px; }
+    .am-nav button[aria-selected="true"] { background: var(--am-green); border-color: var(--am-green); color: var(--color-bg); }
+  }
+  @media (max-width: 640px) {
+    .am { gap: var(--cds-gap-md); }
+    .am-band { padding: var(--cds-pad-md); }
+    .am-brandrow { gap: var(--cds-gap-sm); }
+    .am-logo { padding: 4px 6px; border-radius: 8px; }
+    .am-logo img { height: 34px; }
+    .am-band h1 { font-size: var(--cds-font-size-heading); }
+    .am-eyebrow { font-size: 10px; letter-spacing: .08em; }
+    .am-mode { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+    .am-mode button { padding: 9px 8px; min-height: 38px; }
+    .am-take { font-size: var(--cds-font-size-caption); }
+    .am-meta { font-size: 11px; }
+    .am-shell { gap: var(--cds-gap-md); }
+    .am-card { padding: var(--cds-pad-md); }
+    .am-ph h2 { font-size: var(--cds-font-size-heading); }
+    .am-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cds-gap-sm); }
+    .am-tile { padding: var(--cds-pad-sm) var(--cds-pad-md); }
+    .am-tile .val { font-size: var(--cds-font-size-heading); }
+    .am-tile .lab { font-size: 12px; }
+    .am-man-time { font-size: var(--cds-font-size-heading); }
+    .am-legend { gap: var(--cds-gap-sm) var(--cds-gap-md); font-size: 11px; }
+    .am-map, .am-porto { min-height: 0; }
+    .am-tablebox { max-height: 70vh; margin-inline: calc(-1 * var(--cds-pad-md)); padding-inline: var(--cds-pad-md); }
+    .am-tablebox th:first-child, .am-tablebox td:first-child { position: sticky; left: 0; z-index: 1; background: var(--color-panel); }
+    .am-tablebox th:first-child { z-index: 2; }
+    .am tr.am-row-am td:first-child { background: linear-gradient(var(--am-green-soft), var(--am-green-soft)), var(--color-panel); }
+    .am-tablebox td:first-child { box-shadow: 1px 0 0 var(--color-border-line); }
+    .am tr.am-row-am td:first-child { box-shadow: inset 3px 0 0 var(--am-green), 1px 0 0 var(--color-border-line); }
+    .am-bar > .am-bar { width: 100%; }
+    .am-seg { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; }
+    .am-ph > .am-seg, .am-bar > .am-seg { min-width: 0; flex: 1 1 100%; }
+    .am-seg button { flex: 1 0 auto; }
+    .am-seg button { white-space: nowrap; padding: 8px 12px; min-height: 36px; }
+    .am-input { font-size: 16px; padding: 8px 10px; flex: 1 1 12rem; width: 100%; }
+    .am-tip { white-space: normal; max-width: min(16rem, 80vw); }
+  }
+</style>
+
+<div class="am">
+  <header class="am-band" id="topo">
+    <div class="am-brandrow">
+      <div class="am-brandbox">
+        <div class="am-logo"><img alt="Além Mar Transportes e Navegação" src="data:image/png;base64,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"></div>
+        <div class="am-brand">
+          <span class="am-eyebrow">Além Mar Transportes e Navegação</span>
+          <h1>Radar Noronha</h1>
+        </div>
+      </div>
+      <div class="am-mode" role="group" aria-label="Modo de visualização">
+        <button id="modo-todas" data-g="todas" aria-pressed="true">Toda a rota</button>
+        <button id="modo-alemmar" data-g="alemmar" aria-pressed="false">Frota Além Mar</button>
+      </div>
+    </div>
+    <p class="am-take">
+      Agora: <b data-source="resumo" data-field="navegando">—</b> navegando,
+      <b data-source="resumo" data-field="fundeio">—</b> no fundeio e
+      <b data-source="resumo" data-field="atracado">—</b> atracados em Noronha.
+      <span data-source="resumo" data-field="alemmar_texto">—</span>
+    </p>
+    <p class="am-meta">Último boletim do grupo Navios Noronha: <span data-source="situacao_atual" data-field="boletim" data-row="0">—</span> · Atualizado automaticamente a cada 4 horas, das 06:38 às 22:38</p>
+  </header>
+
+  <div class="am-shell">
+    <aside class="am-side">
+      <nav class="am-nav" role="tablist" aria-label="Seções">
+        <button role="tab" id="nav-visao" data-page="visao" aria-selected="true">Visão geral</button>
+        <button role="tab" id="nav-programacao" data-page="programacao" aria-selected="false">Programação portuária</button>
+        <button role="tab" id="nav-desempenho" data-page="desempenho" aria-selected="false">Desempenho</button>
+        <button role="tab" id="nav-barco" data-page="barco" aria-selected="false">Por embarcação</button>
+        <button role="tab" id="nav-viagens" data-page="viagens" aria-selected="false">Histórico de viagens</button>
+        <button role="tab" id="nav-cadastro" data-page="cadastro" aria-selected="false">Cadastro da frota</button>
+        <button role="tab" id="nav-metodo" data-page="metodo" aria-selected="false">Como funciona</button>
+      </nav>
+      <p class="am-sidenote">Os números marcados <b>Mediana</b> mostram o valor típico. Os marcados <b>Total</b> somam o período. Os marcados <b>Agora</b> vêm do último boletim.</p>
+    </aside>
+
+    <main>
+      <!-- VISÃO GERAL -->
+      <section class="am-page" id="visao">
+        <div class="am-tiles" id="tiles-agora">
+          <div class="am-tile"><span class="am-tag now">Agora</span><span class="lab">Navegando para Noronha</span><span class="val" data-source="resumo" data-field="navegando">—</span></div>
+          <div class="am-tile"><span class="am-tag now">Agora</span><span class="lab">No fundeio</span><span class="val" data-source="resumo" data-field="fundeio">—</span></div>
+          <div class="am-tile"><span class="am-tag now">Agora</span><span class="lab">Atracados no Porto de Santo Antônio</span><span class="val" data-source="resumo" data-field="atracado">—</span></div>
+          <div class="am-tile"><span class="am-tag now">Previsão</span><span class="lab">Chegadas previstas nas próximas 24 h</span><span class="val" data-source="resumo" data-field="chegadas_24h">—</span></div>
+          <div class="am-tile hl"><span class="am-tag now">Agora</span><span class="lab">Barcos Além Mar na rota</span><span class="val" data-source="resumo" data-field="alemmar_na_rota">—</span></div>
+        </div>
+
+        <div class="am-card am-hero" id="card-manobras">
+          <div class="am-bar" style="justify-content: space-between">
+            <h3>Manobras previstas no Porto de Santo Antônio</h3>
+            <span class="am-note" id="manobras-ref">—</span>
+          </div>
+          <p class="am-note"><span class="am-pill prog">Programado</span> = anunciado no grupo. <span class="am-pill est">Estimativa</span> = calculada pelo histórico, já levando em conta quanto tempo o barco está esperando. Nenhuma previsão é confirmação.</p>
+          <div class="am-man-grid" data-source="situacao_atual">
+            <div class="am-man-col" id="col-atr"><h4><i class="am-dot" style="background: var(--color-warn)"></i>Próximas atracações</h4><div class="am-man-list" id="man-atr"></div></div>
+            <div class="am-man-col" id="col-des"><h4><i class="am-dot" style="background: var(--am-green)"></i>Próximas desatracações</h4><div class="am-man-list" id="man-des"></div></div>
+            <div class="am-man-col" id="col-che"><h4><i class="am-dot" style="background: var(--am-nav)"></i>Chegando ao fundeio</h4><div class="am-man-list" id="man-che"></div></div>
+          </div>
+        </div>
+
+        <div class="am-card am-hero" id="card-mapa">
+          <div class="am-bar" style="justify-content: space-between">
+            <h3>Mapa da operação</h3>
+            <div class="am-legend">
+              <span><i class="am-dot" style="background: var(--am-nav)"></i>Navegando</span>
+              <span><i class="am-dot" style="background: var(--color-warn)"></i>Fundeio</span>
+              <span><i class="am-dot" style="background: var(--am-green)"></i>Atracado</span>
+              <span><i class="am-badge" style="margin:0">AM</i>Além Mar</span>
+              <span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6,0 L12,6 L6,12 L0,6 Z" fill="var(--am-nav)"></path></svg>Posição GPS (AIS)</span>
+            </div>
+          </div>
+          <p class="am-note">Losangos são posições reais de GPS (AIS) das últimas 24 h, quando o barco está ao alcance das antenas. À esquerda, a rota e os portos. Sem GPS conectado, quem está navegando aparece junto ao porto de onde saiu, com o tempo de viagem, e não num ponto inventado no mar. À direita, o esquema do porto de Noronha (fora de escala), com quem está no cais e quem espera no fundeio. <span class="am-hint-mouse">Passe o mouse sobre um barco para ver detalhes.</span><span class="am-hint-touch">Toque num barco para ver detalhes.</span></p>
+          <div class="am-mapwrap">
+            <div class="am-map dash-skeleton" id="mapa" data-source="situacao_atual"></div>
+            <div class="am-map am-porto dash-skeleton" id="porto" data-source="situacao_atual"></div>
+          </div>
+        </div>
+
+        <div class="am-card" id="card-ais">
+          <h3>Últimas posições GPS (AIS)</h3>
+          <p class="am-note">Coletadas a cada 2 horas. O sinal costuma sumir no meio da travessia, fora do alcance das antenas da costa; a posição fica valendo até o próximo sinal.</p>
+          <div class="am-tablebox" style="max-height: 20rem">
+            <table id="tab-ais" data-source="posicoes_ais" data-row-key="embarcacao">
+              <thead><tr><th data-field="embarcacao">Embarcação</th><th data-field="local">Onde</th><th data-field="quando">Horário</th><th class="num" data-field="velocidade_nos">Velocidade</th><th data-field="status_ais">Situação AIS</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="am-grid">
+          <div class="am-card" id="card-proximos">
+            <h3>Situação de cada barco</h3>
+            <p class="am-note">Pelo último boletim, com o próximo evento previsto.</p>
+            <div class="am-tablebox">
+              <table id="tab-proximos" data-source="situacao_atual" data-row-key="embarcacao">
+                <thead><tr>
+                  <th data-field="embarcacao">Embarcação</th>
+                  <th data-field="situacao">Situação</th>
+                  <th data-field="desde">Desde</th>
+                  <th data-field="previsao">Próximo evento</th>
+                  <th data-field="alerta">Atenção</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="am-card" id="card-travessias">
+            <h3>Travessias em andamento</h3>
+            <p class="am-note">A faixa verde é a janela típica de chegada do barco (do 1º ao 3º quartil das últimas travessias). O traço mostra quanto tempo já passou desde a saída.</p>
+            <div id="travessias" data-source="situacao_atual"></div>
+          </div>
+        </div>
+
+        <div class="am-card" id="card-registros">
+          <h3>Registros da equipe</h3>
+          <p class="am-note">Eventos e programações lançados na Central de Operações nos últimos 60 dias. Eventos confirmados depois do último boletim já atualizam a situação dos barcos acima.</p>
+          <div class="am-tablebox" style="max-height: 18rem">
+            <table id="tab-registros" data-source="registros" data-row-key="id">
+              <thead><tr><th data-field="quando">Quando</th><th data-field="embarcacao">Embarcação</th><th data-field="tipo">Evento</th><th data-field="observacao">Observação</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="am-card" id="card-fila">
+          <h3>Fila no fundeio de Noronha</h3>
+          <p class="am-note">Barcos esperando no fundeio, pelo último boletim de cada dia, nos últimos 120 dias. Conta todos os barcos da rota.</p>
+          <div class="am-chart dash-skeleton" id="chart-fila" data-source="fila_diaria"></div>
+        </div>
+      </section>
+
+      <!-- PROGRAMAÇÃO -->
+      <section class="am-page" id="programacao" hidden>
+        <div class="am-ph">
+          <h2>Programação portuária</h2>
+          <p>Atracações e desatracações anunciadas no grupo (alertas de manobra), comparadas com o que de fato aconteceu nos boletins.</p>
+        </div>
+        <div class="am-tiles">
+          <div class="am-tile"><span class="am-tag">Percentual</span><span class="lab">Cumpridas com até 1 h de diferença</span><span class="val" data-source="kpi" data-field="pontualidade">—</span><span class="dlt" data-source="kpi" data-field="d_pontualidade">—</span><span class="def" data-source="kpi" data-field="n_prog">—</span></div>
+          <div class="am-tile"><span class="am-tag">Mediana</span><span class="lab">Diferença típica, real × programado</span><span class="val" data-source="kpi" data-field="desvio_prog_mediano">—</span><span class="def">Positivo é atraso; negativo, adiantado.</span></div>
+          <div class="am-tile"><span class="am-tag sum">Total</span><span class="lab">Programações com horário alterado</span><span class="val" data-source="kpi" data-field="prog_alteradas">—</span><span class="def">Anúncios refeitos com novo horário.</span></div>
+        </div>
+        <div class="am-card" id="card-prog">
+          <div class="am-bar" style="justify-content: space-between">
+            <h3>Agenda de manobras</h3>
+            <div class="am-bar">
+              <div class="am-seg" role="group" aria-label="Janela da agenda">
+                <button id="pj-14" data-pj="14" aria-pressed="true">Últimos 14 dias</button>
+                <button id="pj-60" data-pj="60" aria-pressed="false">60 dias</button>
+              </div>
+              <input class="am-input" id="busca-prog" type="search" placeholder="Buscar embarcação" aria-label="Buscar na programação">
+            </div>
+          </div>
+          <p class="am-note">Período dos indicadores acima segue o filtro da aba Desempenho (<span id="prog-periodo">—</span>). A tabela mostra os dias mais recentes primeiro.</p>
+          <div class="am-tablebox">
+            <table id="tab-prog" data-source="programacao" data-row-key="id">
+              <thead><tr>
+                <th data-field="dia">Dia</th>
+                <th data-field="tipo">Manobra</th>
+                <th data-field="embarcacao">Embarcação</th>
+                <th data-field="programado">Programado</th>
+                <th data-field="realizado">Realizado</th>
+                <th class="num" data-field="desvio_h">Diferença</th>
+                <th class="num" data-field="alteracoes">Alterações</th>
+                <th data-field="situacao">Situação</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- DESEMPENHO -->
+      <section class="am-page" id="desempenho" hidden>
+        <div class="am-ph">
+          <h2>Desempenho da rota</h2>
+          <div class="am-seg" role="group" aria-label="Período">
+            <button id="p-7d" data-p="7d" aria-pressed="false">7 dias</button>
+            <button id="p-30d" data-p="30d" aria-pressed="true">30 dias</button>
+            <button id="p-ano" data-p="ano" aria-pressed="false">Desde o início do ano</button>
+            <button id="p-12m" data-p="12m" aria-pressed="false">12 meses</button>
+            <button id="p-tudo" data-p="tudo" aria-pressed="false">Tudo</button>
+          </div>
+        </div>
+        <p class="am-note" id="periodo-nota">—</p>
+        <div class="am-tiles" id="kpis">
+          <div class="am-tile"><span class="am-tag sum">Total no período</span><span class="lab">Viagens concluídas a Noronha</span><span class="val" data-source="kpi" data-field="viagens">—</span><span class="dlt" data-source="kpi" data-field="d_viagens">—</span></div>
+          <div class="am-tile"><span class="am-tag">Mediana</span><span class="lab">Travessia</span><span class="val" data-source="kpi" data-field="travessia_mediana">—</span><span class="dlt" data-source="kpi" data-field="d_travessia">—</span><span class="def" data-source="kpi" data-field="n_trav">—</span></div>
+          <div class="am-tile"><span class="am-tag">Mediana</span><span class="lab">Espera no fundeio</span><span class="val" data-source="kpi" data-field="espera_mediana">—</span><span class="dlt" data-source="kpi" data-field="d_espera">—</span><span class="def" data-source="kpi" data-field="n_esp">—</span></div>
+          <div class="am-tile"><span class="am-tag">Mediana</span><span class="lab">Tempo atracado</span><span class="val" data-source="kpi" data-field="atracado_mediano">—</span><span class="dlt" data-source="kpi" data-field="d_atracado">—</span><span class="def" data-source="kpi" data-field="n_atr">—</span></div>
+          <div class="am-tile"><span class="am-tag">Mediana</span><span class="lab">Permanência total em Noronha</span><span class="val" data-source="kpi" data-field="permanencia_mediana">—</span><span class="dlt" data-source="kpi" data-field="d_permanencia">—</span><span class="def">Da chegada ao fundeio até desatracar.</span></div>
+          <div class="am-tile"><span class="am-tag">Média diária</span><span class="lab">Fila no fundeio</span><span class="val" data-source="kpi" data-field="fila_media">—</span><span class="dlt" data-source="kpi" data-field="d_fila">—</span><span class="def">Todos os barcos da rota.</span></div>
+          <div class="am-tile"><span class="am-tag">Percentual</span><span class="lab">Chegadas dentro da previsão (± 6 h)</span><span class="val" data-source="kpi" data-field="acerto_previsao">—</span><span class="dlt" data-source="kpi" data-field="d_acerto">—</span><span class="def" data-source="kpi" data-field="n_prev">—</span></div>
+        </div>
+
+        <div class="am-card" id="card-comparativo">
+          <h3>Além Mar × outras operadoras</h3>
+          <p class="am-note">Mesmo período. Tempos menores são melhores, exceto viagens.</p>
+          <div class="am-tablebox">
+            <table id="tab-comp" data-source="kpi" data-row-key="periodo,grupo">
+              <thead><tr>
+                <th data-field="grupo">Grupo</th>
+                <th class="num" data-field="viagens">Viagens <span class="am-sub">total</span></th>
+                <th class="num" data-field="travessia_mediana">Travessia <span class="am-sub">mediana</span></th>
+                <th class="num" data-field="espera_mediana">Espera fundeio <span class="am-sub">mediana</span></th>
+                <th class="num" data-field="atracado_mediano">Atracado <span class="am-sub">mediana</span></th>
+                <th class="num" data-field="permanencia_mediana">Permanência <span class="am-sub">mediana</span></th>
+                <th class="num" data-field="acerto_previsao">Previsão ± 6 h <span class="am-sub">%</span></th>
+                <th class="num" data-field="pontualidade">Programação ± 1 h <span class="am-sub">%</span></th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="am-grid">
+          <div class="am-card" id="card-mensal">
+            <h3>Viagens por mês</h3>
+            <p class="am-note">Total de chegadas por mês, últimos 24 meses. Verde é a frota Além Mar.</p>
+            <div class="am-chart dash-skeleton" id="chart-mensal" data-source="mensal"></div>
+            <div class="am-legend"><span><i class="am-sq" style="background: var(--am-green)"></i>Além Mar</span><span><i class="am-sq" style="background: var(--cds-chart-muted)"></i>Outras operadoras</span></div>
+          </div>
+          <div class="am-card" id="card-espera">
+            <h3>Espera no fundeio por mês</h3>
+            <p class="am-note">Mediana mensal, em horas, de todos os barcos acompanhados. Últimos 24 meses.</p>
+            <div class="am-chart dash-skeleton" id="chart-espera" data-source="mensal"></div>
+          </div>
+        </div>
+
+        <div class="am-card" id="card-frota">
+          <h3>Ranking por embarcação</h3>
+          <p class="am-note">No período escolhido. Linhas em verde são da Além Mar. <span class="am-hint-mouse">Clique</span><span class="am-hint-touch">Toque</span> no cabeçalho para ordenar e no nome para abrir a página do barco.</p>
+          <div class="am-tablebox">
+            <table id="tab-frota" data-source="frota_kpi" data-row-key="periodo,embarcacao">
+              <thead><tr>
+                <th data-field="embarcacao"><button data-sort="embarcacao">Embarcação</button></th>
+                <th class="num" data-field="viagens"><button data-sort="viagens">Viagens</button> <span class="am-sub">total</span></th>
+                <th class="num" data-field="travessia_mediana"><button data-sort="travessia_mediana">Travessia</button> <span class="am-sub">mediana</span></th>
+                <th class="num" data-field="espera_mediana"><button data-sort="espera_mediana">Espera</button> <span class="am-sub">mediana</span></th>
+                <th class="num" data-field="atracado_mediano"><button data-sort="atracado_mediano">Atracado</button> <span class="am-sub">mediana</span></th>
+                <th class="num" data-field="intervalo_mediano_dias"><button data-sort="intervalo_mediano_dias">Intervalo entre viagens</button> <span class="am-sub">mediana</span></th>
+                <th class="num" data-field="acerto_previsao"><button data-sort="acerto_previsao">Previsão ± 6 h</button></th>
+                <th data-field="ultima_chegada"><button data-sort="ultima_chegada">Última chegada</button></th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- POR EMBARCAÇÃO -->
+      <section class="am-page" id="barco" hidden>
+        <div class="am-ph">
+          <h2 id="barco-titulo">Por embarcação</h2>
+          <div class="am-bar">
+            <label class="am-note" for="sel-barco">Embarcação</label>
+            <select class="am-input" id="sel-barco" data-source="frota"></select>
+          </div>
+        </div>
+        <p class="am-note" id="barco-nota">—</p>
+        <div class="am-tiles" id="barco-kpis">
+          <div class="am-tile"><span class="am-tag sum">Total no período</span><span class="lab">Viagens</span><span class="val" data-source="frota_kpi" data-field="viagens">—</span></div>
+          <div class="am-tile"><span class="am-tag">Mediana</span><span class="lab">Travessia</span><span class="val" data-source="frota_kpi" data-field="travessia_mediana">—</span></div>
+          <div class="am-tile"><span class="am-tag">Mediana</span><span class="lab">Espera no fundeio</span><span class="val" data-source="frota_kpi" data-field="espera_mediana">—</span></div>
+          <div class="am-tile"><span class="am-tag">Mediana</span><span class="lab">Tempo atracado</span><span class="val" data-source="frota_kpi" data-field="atracado_mediano">—</span></div>
+          <div class="am-tile"><span class="am-tag">Mediana</span><span class="lab">Intervalo entre viagens</span><span class="val" data-source="frota_kpi" data-field="intervalo_mediano_dias">—</span></div>
+          <div class="am-tile"><span class="am-tag">Percentual</span><span class="lab">Chegadas dentro da previsão</span><span class="val" data-source="frota_kpi" data-field="acerto_previsao">—</span></div>
+        </div>
+        <div class="am-card" id="card-barco-hist">
+          <h3>Últimas 30 travessias</h3>
+          <p class="am-note">Barras: horas de travessia de cada viagem. Linha laranja: o que a previsão por média histórica esperava antes da viagem.</p>
+          <div class="am-chart dash-skeleton" id="chart-barco" data-source="viagens"></div>
+          <div class="am-legend"><span><i class="am-sq" style="background: var(--am-green)"></i>Travessia real</span><span><i class="am-sq" style="background: var(--am-orange)"></i>Previsão</span></div>
+        </div>
+        <div class="am-card" id="card-barco-viagens">
+          <h3>Viagens desta embarcação</h3>
+          <div class="am-tablebox">
+            <table id="tab-barco" data-source="viagens" data-row-key="id">
+              <thead><tr>
+                <th data-field="data_ref">Chegada</th>
+                <th data-field="origem">Origem</th>
+                <th data-field="saida_continente">Saída do continente</th>
+                <th class="num" data-field="travessia_h">Travessia</th>
+                <th class="num" data-field="previsao_travessia_h">Previsto</th>
+                <th class="num" data-field="espera_fundeio_h">Espera</th>
+                <th class="num" data-field="tempo_atracado_h">Atracado</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- HISTÓRICO DE VIAGENS -->
+      <section class="am-page" id="viagens" hidden>
+        <div class="am-card" id="card-viagens">
+          <div class="am-bar" style="justify-content: space-between">
+            <h3>Histórico de viagens</h3>
+            <input class="am-input" id="busca-viagens" type="search" placeholder="Buscar barco, origem ou data" aria-label="Buscar viagens">
+          </div>
+          <p class="am-note">Uma linha por ida a Noronha. "~" marca desatracação estimada pelos boletins; campos vazios são etapas que o boletim não informou. Segue o modo Toda a rota / Frota Além Mar.</p>
+          <div class="am-tablebox">
+            <table id="tab-viagens" data-source="viagens" data-row-key="id">
+              <thead><tr>
+                <th data-field="embarcacao">Embarcação</th>
+                <th data-field="origem">Origem</th>
+                <th data-field="saida_continente">Saída</th>
+                <th data-field="chegada_fundeio">Fundeio</th>
+                <th data-field="atracacao">Atracação</th>
+                <th data-field="desatracacao">Desatracação</th>
+                <th class="num" data-field="travessia_h">Travessia</th>
+                <th class="num" data-field="espera_fundeio_h">Espera</th>
+                <th class="num" data-field="tempo_atracado_h">Atracado</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- CADASTRO -->
+      <section class="am-page" id="cadastro" hidden>
+        <div class="am-card" id="card-cadastro">
+          <h3>Cadastro da frota monitorada</h3>
+          <p class="am-note">IMO e MMSI ficam como "Não informado" até serem confirmados; com o MMSI de cada barco, dá para ligar o GPS (AIS). Os nomes alternativos são as grafias reconhecidas nas mensagens e precisam da sua confirmação.</p>
+          <div class="am-tablebox">
+            <table id="tab-cadastro" data-source="frota" data-row-key="embarcacao">
+              <thead><tr>
+                <th data-field="embarcacao">Embarcação</th>
+                <th data-field="empresa">Classificação</th>
+                <th data-field="nomes_alternativos">Nomes reconhecidos</th>
+                <th data-field="porto_habitual">Sai mais de</th>
+                <th data-field="imo">IMO</th>
+                <th data-field="mmsi">MMSI</th>
+                <th data-field="situacao_atual">Situação</th>
+                <th class="num" data-field="viagens_registradas">Viagens registradas</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- COMO FUNCIONA -->
+      <section class="am-page" id="metodo" hidden>
+        <div class="am-card" id="card-metodo">
+          <h3>Como os números são feitos</h3>
+          <div class="am-method">
+            <h4>Fonte</h4>
+            <p>Conversa exportada do grupo de WhatsApp Navios Noronha, de outubro de 2023 até o último boletim. Os boletins "Rota Recife/Natal/Noronha" dizem quem está navegando, no fundeio e atracado. Os alertas "Atenção – Desatracação/Atracação" dão a programação de manobras. Mensagens pessoais não aparecem no painel.</p>
+            <h4>Média, mediana e total</h4>
+            <p><b>Mediana</b> é o valor do meio quando todas as viagens são colocadas em ordem: metade foi mais rápida, metade mais lenta. Usamos mediana nos tempos porque um boletim mal digitado não a distorce, ao contrário da média. <b>Média diária</b> aparece só na fila do fundeio. <b>Total</b> soma o período. <b>Percentual</b> é a parte das viagens que cumpriu a condição. Cada indicador traz a etiqueta correspondente.</p>
+            <h4>Etapas de cada viagem</h4>
+            <p>Saída do continente vem da lista "Navegando"; chegada, do "Fundeio" (quem atraca direto tem espera zero); atracação, do "Atracado". Desatracação vem de mensagens como "suspendeu do Porto Santo Antônio" ou, sem mensagem, é estimada entre o último boletim em que o barco aparece atracado e o primeiro em que some. Valores fora do plausível ficam de fora: travessia fora de 12–72 h, espera acima de 10 dias, tempo atracado fora de 1–120 h. Com menos de 3 viagens no período o painel mostra "Dados insuficientes".</p>
+            <h4>Previsões</h4>
+            <p>Chegada: hora de saída mais a mediana das últimas 15 travessias daquele barco saindo do mesmo porto (ou de qualquer porto, se houver poucas; ou da rota, se o barco tiver menos de 3). A janela vai do 1º ao 3º quartil dessas travessias. Atracação de quem está no fundeio: hora programada no grupo, se houver; senão, chegada mais a mediana de espera dos últimos 30 dias. Desatracação: programação do grupo ou mediana do tempo atracado das últimas 10 operações do barco.</p>
+            <p>"Chegadas dentro da previsão" testa esse método no passado: para cada viagem, comparamos a travessia real com a mediana das 15 anteriores do mesmo barco e contamos as que ficaram a até 6 h.</p>
+            <h4>Atualização automática</h4>
+            <p>Um administrador importa a conversa exportada do grupo (sem mídia) na Central de Operações. A equipe operacional registra lá eventos e programações que ainda não estão no grupo. A cada 4 horas, das 06:38 às 22:38, uma automação lê a última importação, os registros e o cadastro da frota, refaz as viagens e atualiza este painel. Registros da equipe posteriores ao último boletim mudam a situação dos barcos e aparecem marcados como "registro da equipe".</p>
+            <h4>Acesso e privacidade</h4>
+            <p>Esta página é pública para quem tiver o link e não exige login. Mensagens do WhatsApp nunca aparecem aqui, nem nomes de quem enviou boletins ou registrou eventos.</p>
+            <h4>GPS (AIS)</h4>
+            <p>Um coletor no GitHub escuta o sinal AIS dos barcos cadastrados (pelo MMSI) a cada 2 horas, usando o serviço gratuito aisstream.io. A automação junta essas posições ao painel: losangos no mapa e a tabela de últimas posições. Quando o GPS contradiz o boletim (barco parado no porto de origem ou já em Noronha enquanto o boletim diz "navegando"), o painel mostra um alerta. O sinal gratuito vem de antenas em terra, por isso some no meio da travessia.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+/* ======================= cálculos ======================= */
+dash.calc('resumo', {
+  inputs: ['situacao_atual'],
+  title: 'Resumo da situação atual',
+  description: 'Conta barcos por situação no último boletim, chegadas estimadas em 24 h e a situação da frota Além Mar.',
+  fn: (situacao_atual) => {
+    const out = [];
+    const last = situacao_atual.length ? new Date(situacao_atual[0].referencia || situacao_atual[0].boletim) : null;
+    for (const g of ['todas', 'alemmar']) {
+      const rs = situacao_atual.filter((r) => g === 'todas' || r.empresa === 'Além Mar');
+      const n = (s) => rs.filter((r) => r.situacao === s).length;
+      const c24 = rs.filter((r) => r.proximo_evento === 'Chegada ao fundeio' && r.previsao && last && (new Date(r.previsao) - last) / 3.6e6 <= 24).length;
+      const am = situacao_atual.filter((r) => r.empresa === 'Além Mar');
+      const txt = am.length ? 'Além Mar: ' + am.map((r) => r.embarcacao + ' ' + r.situacao.toLowerCase()).join(', ') + '.' : 'Nenhum barco Além Mar no último boletim.';
+      out.push({ grupo: g, navegando: n('Navegando'), fundeio: n('Fundeio'), atracado: n('Atracado'), chegadas_24h: c24, alemmar_na_rota: am.length, alemmar_texto: txt });
+    }
+    return out;
+  },
+});
+
+dash.calc('kpi', {
+  inputs: ['viagens', 'fila_diaria', 'programacao'],
+  title: 'Indicadores por período',
+  description: 'Por período e grupo (toda a rota, Além Mar, outras): viagens (total), medianas de travessia, espera, tempo atracado e permanência, fila média diária, acerto da previsão (± 6 h) e cumprimento da programação (± 1 h), com variação contra o período anterior.',
+  fn: (viagens, fila_diaria, programacao) => {
+    const med = (a) => { const s = a.filter((x) => x != null).map(Number).sort((x, y) => x - y); if (s.length < 3) return null; const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+    const r1 = (x) => (x == null ? null : Math.round(x * 10) / 10);
+    const anchor = viagens.reduce((m, r) => (r.data_ref > m ? r.data_ref : m), '');
+    const shift = (iso, days) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - days); return d.toISOString().slice(0, 10); };
+    const yr = Number(anchor.slice(0, 4));
+    const prevYearSame = shift(anchor, 365);
+    const windows = {
+      '7d': [[shift(anchor, 7), anchor], [shift(anchor, 14), shift(anchor, 7)]],
+      '30d': [[shift(anchor, 30), anchor], [shift(anchor, 60), shift(anchor, 30)]],
+      ano: [[(yr - 1) + '-12-31', anchor], [(yr - 2) + '-12-31', prevYearSame]],
+      '12m': [[shift(anchor, 365), anchor], [shift(anchor, 730), shift(anchor, 365)]],
+      tudo: [['0000-00-00', anchor], null],
+    };
+    const grp = (g) => (r) => g === 'todas' || (g === 'alemmar' ? r.empresa === 'Além Mar' : r.empresa !== 'Além Mar');
+    const calc = (from, to, g) => {
+      const v = viagens.filter((r) => r.data_ref > from && r.data_ref <= to && (r.chegada_fundeio || r.atracacao) && grp(g)(r));
+      const f = fila_diaria.filter((r) => r.dia > from && r.dia <= to).map((r) => Number(r.fundeio));
+      const pv = v.filter((r) => r.erro_previsao_h != null);
+      const pg = programacao.filter((r) => r.dia > from && r.dia <= to && r.desvio_h != null && grp(g)(r));
+      const pa = programacao.filter((r) => r.dia > from && r.dia <= to && grp(g)(r));
+      const val = (k) => v.map((r) => r[k]).filter((x) => x != null);
+      return {
+        viagens: v.length,
+        travessia_mediana: r1(med(val('travessia_h'))), n_trav: val('travessia_h').length,
+        espera_mediana: r1(med(val('espera_fundeio_h'))), n_esp: val('espera_fundeio_h').length,
+        atracado_mediano: r1(med(val('tempo_atracado_h'))), n_atr: val('tempo_atracado_h').length,
+        permanencia_mediana: r1(med(val('permanencia_noronha_h'))),
+        fila_media: f.length ? r1(f.reduce((a, b) => a + b, 0) / f.length) : null,
+        acerto_previsao: pv.length >= 3 ? Math.round((pv.filter((r) => Math.abs(r.erro_previsao_h) <= 6).length / pv.length) * 1000) / 1000 : null, n_prev: pv.length,
+        pontualidade: pg.length >= 3 ? Math.round((pg.filter((r) => Math.abs(r.desvio_h) <= 1).length / pg.length) * 1000) / 1000 : null, n_prog: pg.length,
+        desvio_prog_mediano: r1(med(pg.map((r) => r.desvio_h))),
+        prog_alteradas: pa.filter((r) => r.alteracoes > 0).length,
+      };
+    };
+    const out = [];
+    for (const [p, [cur, prev]] of Object.entries(windows)) {
+      for (const g of ['todas', 'alemmar', 'outras']) {
+        const c = calc(cur[0], cur[1], g);
+        const b = prev ? calc(prev[0], prev[1], g) : null;
+        const dd = (k, pct) => (!b || c[k] == null || b[k] == null ? null : pct ? Math.round((c[k] - b[k]) * 1000) / 1000 : Math.round((c[k] - b[k]) * 10) / 10);
+        out.push({ periodo: p, grupo: g, de: cur[0], ate: cur[1], ...c,
+          d_viagens: dd('viagens'), d_travessia: dd('travessia_mediana'), d_espera: dd('espera_mediana'), d_atracado: dd('atracado_mediano'),
+          d_permanencia: dd('permanencia_mediana'), d_fila: dd('fila_media'), d_acerto: dd('acerto_previsao', true), d_pontualidade: dd('pontualidade', true) });
+      }
+    }
+    return out;
+  },
+});
+
+dash.calc('mensal', {
+  inputs: ['viagens'],
+  title: 'Viagens e espera por mês',
+  description: 'Por mês: chegadas a Noronha da frota Além Mar e das outras operadoras (totais) e mediana da espera no fundeio.',
+  fn: (viagens) => {
+    const med = (a) => { const s = a.filter((x) => x != null).map(Number).sort((x, y) => x - y); if (!s.length) return null; const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+    const by = new Map();
+    for (const r of viagens) {
+      if (!(r.chegada_fundeio || r.atracacao)) continue;
+      const k = r.data_ref.slice(0, 7);
+      if (!by.has(k)) by.set(k, []);
+      by.get(k).push(r);
+    }
+    return [...by.keys()].sort().map((k) => {
+      const rs = by.get(k);
+      const e = med(rs.map((r) => r.espera_fundeio_h));
+      const am = rs.filter((r) => r.empresa === 'Além Mar').length;
+      return { mes: k, viagens_total: rs.length, viagens_alemmar: am, viagens_outras: rs.length - am, espera_mediana: e == null ? null : Math.round(e * 10) / 10 };
+    });
+  },
+});
+
+dash.calc('frota_kpi', {
+  inputs: ['viagens'],
+  title: 'Indicadores por embarcação',
+  description: 'Por barco e período: viagens (total), medianas de travessia, espera, tempo atracado e intervalo entre viagens, acerto da previsão (± 6 h) e última chegada.',
+  fn: (viagens) => {
+    const med = (a) => { const s = a.filter((x) => x != null).map(Number).sort((x, y) => x - y); if (s.length < 3) return null; const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+    const r1 = (x) => (x == null ? null : Math.round(x * 10) / 10);
+    const anchor = viagens.reduce((m, r) => (r.data_ref > m ? r.data_ref : m), '');
+    const shift = (iso, days) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - days); return d.toISOString().slice(0, 10); };
+    const yr = Number(anchor.slice(0, 4));
+    const froms = { '7d': shift(anchor, 7), '30d': shift(anchor, 30), ano: (yr - 1) + '-12-31', '12m': shift(anchor, 365), tudo: '0000-00-00' };
+    const arrivals = viagens.filter((r) => r.chegada_fundeio || r.atracacao);
+    const names = [...new Set(viagens.map((r) => r.embarcacao))];
+    const out = [];
+    for (const [p, from] of Object.entries(froms)) {
+      for (const b of names) {
+        const all = arrivals.filter((r) => r.embarcacao === b).sort((x, y) => (x.data_ref < y.data_ref ? -1 : 1));
+        const rs = all.filter((r) => r.data_ref > from);
+        const gaps = [];
+        for (let i = 1; i < all.length; i++) if (all[i].data_ref > from) gaps.push((new Date(all[i].data_ref) - new Date(all[i - 1].data_ref)) / 864e5);
+        const pv = rs.filter((r) => r.erro_previsao_h != null);
+        out.push({ periodo: p, embarcacao: b, empresa: all.length ? all[0].empresa : (viagens.find((r) => r.embarcacao === b) || {}).empresa,
+          viagens: rs.length, travessia_mediana: r1(med(rs.map((r) => r.travessia_h))), espera_mediana: r1(med(rs.map((r) => r.espera_fundeio_h))),
+          atracado_mediano: r1(med(rs.map((r) => r.tempo_atracado_h))), intervalo_mediano_dias: r1(med(gaps.filter((g) => g < 60))),
+          acerto_previsao: pv.length >= 3 ? Math.round((pv.filter((r) => Math.abs(r.erro_previsao_h) <= 6).length / pv.length) * 1000) / 1000 : null,
+          ultima_chegada: rs.map((r) => r.atracacao || r.chegada_fundeio).filter(Boolean).sort().pop() || null });
+      }
+    }
+    return out;
+  },
+});
+</script>
+
+<script>
+/* ======================= utilidades ======================= */
+window.am = window.am || {};
+am.pad = (n) => String(n).padStart(2, '0');
+am.dt = (s) => { if (!s) return ''; const d = new Date(s); if (isNaN(d)) return s; return am.pad(d.getDate()) + '/' + am.pad(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(2) + ' ' + am.pad(d.getHours()) + ':' + am.pad(d.getMinutes()); };
+am.dts = (s) => { if (!s) return ''; const d = new Date(s); if (isNaN(d)) return s; return am.pad(d.getDate()) + '/' + am.pad(d.getMonth() + 1) + ' ' + am.pad(d.getHours()) + ':' + am.pad(d.getMinutes()); };
+am.day = (s) => (s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(2, 4) : '');
+am.h = (x) => { if (x == null || x === '') return ''; x = Number(x); const neg = x < 0; x = Math.abs(x); let t; if (x < 48) t = (x < 10 ? (Math.round(x * 10) / 10).toString().replace('.', ',') : Math.round(x)) + ' h'; else { const d = Math.floor(x / 24), h = Math.round(x - d * 24); t = d + 'd' + (h ? ' ' + h + 'h' : ''); } return (neg ? '−' : '') + t; };
+am.pct = (x) => (x == null ? '' : Math.round(x * 100) + '%');
+am.dias = (x) => (x == null ? '' : String(x).replace('.', ',') + ' dias');
+am.MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+am.mes = (k) => am.MESES[Number(k.slice(5, 7)) - 1] + '/' + k.slice(2, 4);
+am.nome = (s) => s.toLowerCase().replace(/(^|\s)(\S)/g, (m, a, b) => a + b.toUpperCase()).replace(/\bLh\b/, 'LH').replace(/\bF\.\s/, 'F. ').replace(/\bXxi\b/, 'XXI').replace(/\bDe\b/, 'de').replace(/\bDas\b/, 'das');
+am.cls = { Navegando: 'nav', Fundeio: 'fun', Atracado: 'atr' };
+am.isAM = (r) => r.empresa === 'Além Mar';
+am.grupo = () => (['todas', 'alemmar'].includes(dash.params().grupo) ? dash.params().grupo : 'todas');
+am.periodo = () => (['7d', '30d', 'ano', '12m', 'tudo'].includes(dash.params().periodo) ? dash.params().periodo : '30d');
+am.PER = { '7d': 'últimos 7 dias', '30d': 'últimos 30 dias', ano: 'desde o início do ano', '12m': 'últimos 12 meses', tudo: 'todo o histórico' };
+am.fail = (el, st) => { el.classList.remove('dash-skeleton'); el.replaceChildren(); if (['error', 'connect', 'declined', 'missing'].includes(st)) { const p = document.createElement('div'); p.className = 'am-fail'; p.textContent = 'Falha ao carregar'; el.append(p); } };
+am.tip = (box) => { let t = box.querySelector('.am-tip'); if (!t) { t = document.createElement('div'); t.className = 'am-tip'; t.hidden = true; box.append(t); } return t; };
+am.showTip = (box, t, lines, x, y) => {
+  t.replaceChildren(...lines.map(([k, v], i) => { const div = document.createElement('div'); if (i === 0) { div.className = 'k'; div.textContent = k; } else div.textContent = k + (v != null ? ': ' + v : ''); return div; }));
+  t.hidden = false;
+  const bw = box.clientWidth, tw = t.offsetWidth, th = t.offsetHeight;
+  t.style.left = Math.max(0, Math.min(bw - tw, x + 12)) + 'px';
+  t.style.top = Math.max(0, y - th - 10) + 'px';
+};
+am.el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+am.nameCell = (tr, r) => { const td = am.el('td', 'name'); td.append(document.createTextNode(r.embarcacao)); if (am.isAM(r)) td.append(am.el('span', 'am-badge', 'AM')); tr.append(td); if (am.isAM(r)) tr.classList.add('am-row-am'); return td; };
+am.xlabel = (svg, x, y, txt, minX, maxX) => { const t = svg.append('text').attr('y', y).attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text(txt); const w = t.node().getComputedTextLength(); let a = 'middle', xx = x; if (x + w / 2 > maxX) { a = 'end'; xx = maxX; } else if (x - w / 2 < minX) { a = 'start'; xx = minX; } t.attr('x', xx).attr('text-anchor', a); return t; };
+am.fit = (svg, txt, size, maxW) => { let t = txt; while (t.length > 4 && am.measure(svg, t, size) > maxW) t = t.slice(0, -2); return t === txt ? t : t.trimEnd() + '…'; };
+am.measure = (svg, txt, size) => { const t = svg.append('text').attr('font-size', size).text(txt); const w = t.node().getComputedTextLength(); t.remove(); return w; };
+</script>
+
+<script>
+/* ======================= navegação e modo ======================= */
+(() => {
+  const tabs = [...document.querySelectorAll('.am-nav button')];
+  const PAGES = tabs.map((t) => t.dataset.page);
+  window.amShow = (id) => {
+    tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.page === id)));
+    document.querySelectorAll('.am-page').forEach((p) => { p.hidden = p.id !== id; });
+    window.amPage = id;
+    dash.setLink(id);
+    if (window.amRedraw) window.amRedraw();
+    const sel = tabs.find((t) => t.dataset.page === id);
+    if (sel && window.innerWidth < 960) {
+      try { sel.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); } catch (e) {}
+      const shell = document.querySelector('.am-shell');
+      if (shell && shell.getBoundingClientRect().top < 0) try { shell.scrollIntoView({ block: 'start' }); } catch (e) {}
+    }
+  };
+  tabs.forEach((t) => t.addEventListener('click', () => window.amShow(t.dataset.page)));
+  document.querySelectorAll('.am-mode button').forEach((b) => b.addEventListener('click', () => dash.setParams({ grupo: b.dataset.g })));
+  window.amPage = 'visao';
+  const h = location.hash.slice(1);
+  if (PAGES.includes(h)) window.amShow(h);
+})();
+</script>
+
+<script>
+/* ======================= VISÃO GERAL ======================= */
+(() => {
+  const COAST = [[-5.11, -36.63], [-5.09, -36.27], [-5.06, -36.04], [-5.15, -35.6], [-5.2, -35.46], [-5.27, -35.38], [-5.52, -35.26], [-5.79, -35.2], [-5.88, -35.17], [-6.23, -35.05], [-6.37, -35.0], [-6.78, -34.93], [-6.97, -34.84], [-7.15, -34.79], [-7.47, -34.81], [-7.75, -34.83], [-8.01, -34.84], [-8.06, -34.87], [-8.12, -34.89], [-8.39, -34.96], [-8.5, -35.0], [-8.76, -35.1], [-8.9, -35.15], [-9.3, -35.35], [-9.3, -37.5], [-4.8, -37.5]];
+  const ILHA = [[-3.868, -32.468], [-3.853, -32.452], [-3.84, -32.43], [-3.83, -32.41], [-3.818, -32.398], [-3.81, -32.385], [-3.816, -32.38], [-3.829, -32.392], [-3.845, -32.41], [-3.86, -32.437], [-3.872, -32.46]];
+  const PORTOS = [{ n: 'Porto do Recife', lat: -8.0631, lon: -34.8711 }, { n: 'Porto de Natal', lat: -5.7793, lon: -35.2009 }];
+  const NOR = { n: 'Porto de Santo Antônio', lat: -3.8337, lon: -32.4044 };
+  const EXT = { lon0: -35.9, lon1: -31.85, lat0: -3.3, lat1: -8.45 };
+  const ORDER = { Navegando: 0, Fundeio: 1, Atracado: 2 };
+  const colorOf = (st) => (st === 'Navegando' ? 'var(--am-nav)' : st === 'Fundeio' ? 'var(--color-warn)' : 'var(--am-green)');
+  const rowsNow = () => { const s = dash.data('situacao_atual'); if (s.status !== 'ok') return null; const g = am.grupo(); return s.data.filter((r) => g === 'todas' || am.isAM(r)); };
+
+  const header = () => {
+    const g = am.grupo();
+    document.querySelectorAll('.am-mode button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.g === g)));
+    document.querySelectorAll('[data-source="resumo"]').forEach((el) => el.setAttribute('data-where', 'grupo=' + g));
+    const s = dash.data('resumo');
+    const row = s.status === 'ok' ? s.data.find((r) => r.grupo === g) : null;
+    document.querySelectorAll('[data-source="resumo"]').forEach((el) => { el.textContent = row ? String(row[el.dataset.field]) : '—'; });
+    const sa = dash.data('situacao_atual');
+    const b = document.querySelector('[data-source="situacao_atual"][data-field="boletim"]');
+    if (sa.status === 'ok' && sa.data[0]) b.textContent = am.dt(sa.data[0].boletim);
+  };
+
+  const relTxt = (r) => {
+    if (!r.previsao) return ['', ''];
+    const dh = (new Date(r.previsao) - new Date(r.referencia || r.boletim)) / 3.6e6;
+    if (dh >= 0) return ['em ' + am.h(dh) + ' após a última informação', ''];
+    return ['horário já passou e o boletim ainda não confirmou', 'am-bad'];
+  };
+  const STATUS_CLS = { 'Dentro do típico': 'am-good', 'Acima do típico': 'am-bad', 'Acima de todos os registros': 'am-bad', 'Dados insuficientes': 'am-neutral' };
+  const manCard = (r) => {
+    const c = am.el('div', 'am-man' + (am.isAM(r) ? ' am-is' : ''));
+    const top = am.el('div', 'am-man-top');
+    const nm = am.el('span', 'am-man-name', r.embarcacao); if (am.isAM(r)) nm.append(am.el('span', 'am-badge', 'AM'));
+    top.append(nm);
+    if (r.previsao_tipo) top.append(am.el('span', 'am-pill ' + (r.previsao_tipo === 'Estimativa' ? 'est' : 'prog'), r.previsao_tipo === 'Estimativa' ? 'Estimativa' : 'Programado'));
+    c.append(top);
+    if (r.previsao) {
+      c.append(am.el('div', 'am-man-time', am.dts(r.previsao)));
+      const [t, cls] = relTxt(r); c.append(am.el('div', 'am-man-rel ' + cls, t));
+      if (r.previsao_min && r.previsao_max) c.append(am.el('div', 'am-man-meta', 'Janela provável: ' + am.dts(r.previsao_min) + ' a ' + am.dts(r.previsao_max)));
+    } else c.append(am.el('div', 'am-man-time none', r.status_previsao === 'Acima de todos os registros' ? 'Sem estimativa: já passou de quase todos os casos registrados' : 'Dados insuficientes para estimar'));
+    const lbl = r.situacao === 'Navegando' ? 'navegando há ' : r.situacao === 'Fundeio' ? 'no fundeio há ' : 'atracado há ';
+    const st = am.el('div', 'am-man-rel');
+    st.append(document.createTextNode(lbl + am.h(r.horas_na_situacao) + (r.situacao === 'Navegando' ? ' (saiu de ' + r.origem + ')' : '')));
+    if (r.status_previsao && r.previsao_tipo === 'Estimativa') { st.append(document.createTextNode(' · ')); st.append(am.el('span', STATUS_CLS[r.status_previsao] || '', r.status_previsao.toLowerCase())); }
+    c.append(st);
+    if (r.metodo) c.append(am.el('div', 'am-man-meta', r.metodo));
+    return c;
+  };
+  const manobras = () => {
+    const rs = rowsNow();
+    const ids = ['man-atr', 'man-des', 'man-che'];
+    if (!rs) { ids.forEach((i) => document.getElementById(i).replaceChildren()); return; }
+    document.getElementById('manobras-ref').textContent = rs.length ? 'Último boletim: ' + am.dt(rs[0].boletim) + (rs[0].referencia && rs[0].referencia > rs[0].boletim ? ' · registro da equipe até ' + am.dt(rs[0].referencia) : '') : '';
+    const byT = (a, b) => (a.previsao && b.previsao ? (a.previsao < b.previsao ? -1 : 1) : a.previsao ? -1 : b.previsao ? 1 : 0);
+    const fill = (id, list, empty) => { const box = document.getElementById(id); box.replaceChildren(...(list.length ? list.sort(byT).map(manCard) : [am.el('p', 'am-empty', empty)])); };
+    fill('man-atr', rs.filter((r) => r.situacao === 'Fundeio'), 'Nenhum barco esperando no fundeio.');
+    fill('man-des', rs.filter((r) => r.situacao === 'Atracado'), 'Nenhum barco atracado.');
+    fill('man-che', rs.filter((r) => r.situacao === 'Navegando'), 'Nenhuma travessia em andamento.');
+  };
+
+  const proximos = () => {
+    const tb = document.querySelector('#tab-proximos tbody');
+    const rs = rowsNow();
+    if (!rs) { tb.replaceChildren(); return; }
+    tb.replaceChildren(...[...rs].sort((a, b) => ORDER[a.situacao] - ORDER[b.situacao]).map((r) => {
+      const tr = document.createElement('tr');
+      am.nameCell(tr, r);
+      const st = am.el('td'); st.append(am.el('span', 'am-pill ' + am.cls[r.situacao], r.situacao)); tr.append(st);
+      const de = am.el('td', '', am.dts(r.desde)); de.append(am.el('span', 'am-sub', (r.horas_na_situacao != null ? 'há ' + am.h(r.horas_na_situacao) : '') + (r.fonte_situacao === 'Registro da equipe' ? ' · registro da equipe' : ''))); tr.append(de);
+      const pv = am.el('td', '', (r.proximo_evento || '') + (r.previsao ? ': ' + am.dts(r.previsao) : ''));
+      pv.append(am.el('span', 'am-sub', r.previsao ? (r.previsao_tipo === 'Estimativa' ? 'estimativa' : (r.metodo || '').includes('equipe') ? 'programado pela equipe' : 'programado no grupo') : 'sem estimativa'));
+      tr.append(pv);
+      tr.append(am.el('td', 'am-alert', r.alerta || ''));
+      return tr;
+    }));
+    if (!rs.length) { const tr = document.createElement('tr'); const td = am.el('td', 'am-empty', 'Nenhum barco Além Mar no último boletim.'); td.colSpan = 5; tr.append(td); tb.replaceChildren(tr); }
+  };
+
+  const travessias = () => {
+    const box = document.getElementById('travessias');
+    const rs = rowsNow();
+    if (!rs) { box.replaceChildren(); return; }
+    const nav = rs.filter((r) => r.situacao === 'Navegando');
+    if (!nav.length) { box.replaceChildren(am.el('p', 'am-empty', 'Nenhuma travessia em andamento no último boletim.')); return; }
+    box.replaceChildren(...nav.map((r) => {
+      const wrap = am.el('div', 'am-trip');
+      const h = am.el('div', 'am-trip-h');
+      const nm = am.el('b', '', r.embarcacao); if (am.isAM(r)) nm.append(am.el('span', 'am-badge', 'AM'));
+      h.append(nm, am.el('span', r.alerta ? 'am-alert' : 'am-note', r.alerta || ('saiu de ' + r.origem + ' ' + am.dts(r.desde))));
+      wrap.append(h);
+      if (r.previsao_min && r.previsao_max && r.desde) {
+        const t0 = new Date(r.desde), lo = (new Date(r.previsao_min) - t0) / 3.6e6, hi = (new Date(r.previsao_max) - t0) / 3.6e6, el = r.horas_na_situacao;
+        const span = Math.max(hi * 1.25, el * 1.05, 1);
+        const tr = am.el('div', 'am-track');
+        const w = am.el('div', 'am-win'); w.style.left = (lo / span * 100) + '%'; w.style.width = ((hi - lo) / span * 100) + '%';
+        const n = am.el('div', 'am-now' + (el > hi ? ' late' : '')); n.style.left = 'calc(' + Math.min(100, el / span * 100) + '% - 2px)';
+        tr.append(w, n);
+        const f = am.el('div', 'am-trip-f');
+        f.append(am.el('span', '', 'há ' + am.h(el) + ' navegando'), am.el('span', '', 'chegada típica ' + am.dts(r.previsao_min) + '–' + am.dts(r.previsao_max)));
+        wrap.append(tr, f);
+      } else wrap.append(am.el('p', 'am-note', 'Dados insuficientes para estimar a chegada.'));
+      return wrap;
+    }));
+  };
+
+  const hoverTip = (box) => {
+    const tip = am.tip(box);
+    return (sel) => sel.on('mousemove', (ev, r) => {
+      const [x, y] = d3.pointer(ev, box);
+      const lines = [[r.embarcacao + (am.isAM(r) ? ' · Além Mar' : '')], ['Situação', r.situacao + ' há ' + am.h(r.horas_na_situacao)], ['Desde', am.dt(r.desde)], ['Origem', r.origem], ['Destino', 'Fernando de Noronha']];
+      if (r.previsao) lines.push([r.proximo_evento + ' (' + (r.previsao_tipo === 'Estimativa' ? 'estimativa' : 'programado') + ')', am.dt(r.previsao)]);
+      lines.push(['Posição', r.ais_quando ? 'GPS (AIS) ' + am.dts(r.ais_quando) + ': ' + r.ais_local : 'informada no boletim, sem GPS'], ['Fonte', 'boletim de ' + am.dts(r.boletim)]);
+      am.showTip(box, tip, lines, x, y);
+    }).on('mouseleave', () => { tip.hidden = true; });
+  };
+  const km = (a, b) => { const R = 6371, t = Math.PI / 180, dl = (b.lat - a.lat) * t, dn = (b.lon - a.lon) * t; const h = Math.sin(dl / 2) ** 2 + Math.cos(a.lat * t) * Math.cos(b.lat * t) * Math.sin(dn / 2) ** 2; return Math.round(2 * R * Math.asin(Math.sqrt(h))); };
+
+  const mapa = () => {
+    const box = document.getElementById('mapa');
+    const s = dash.data('situacao_atual');
+    if (s.status !== 'ok') { am.fail(box, s.status); return; }
+    if (window.amPage !== 'visao') return;
+    box.classList.remove('dash-skeleton');
+    const rs = rowsNow();
+    const E = { lon0: -35.75, lon1: -31.95, lat0: -3.35, lat1: -8.35 };
+    const W = box.clientWidth || 400;
+    const cos = Math.cos((6 * Math.PI) / 180);
+    const H = Math.round(Math.max(340, Math.min(560, W * 1.05)));
+    const k = Math.min(W / ((E.lon1 - E.lon0) * cos), H / (E.lat0 - E.lat1));
+    const ox = (W - (E.lon1 - E.lon0) * cos * k) / 2, oy = (H - (E.lat0 - E.lat1) * k) / 2;
+    const X = (lon) => ox + (lon - E.lon0) * cos * k, Y = (lat) => oy + (E.lat0 - lat) * k;
+    box.style.minHeight = H + 'px';
+    box.querySelectorAll('svg').forEach((n) => n.remove());
+    const svg = d3.select(box).insert('svg', ':first-child').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Mapa da rota Recife e Natal até Fernando de Noronha');
+    const fs = W < 480 ? 10 : 12;
+    svg.append('defs').html('<marker id="am-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--am-nav)"></path></marker><marker id="am-arrow-am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--am-orange)"></path></marker>');
+    svg.append('rect').attr('width', W).attr('height', H).attr('rx', 6).attr('fill', 'var(--am-green-soft)').attr('opacity', 0.35);
+    for (let lat = -4; lat >= -8; lat -= 1) { svg.append('line').attr('x1', 0).attr('x2', W).attr('y1', Y(lat)).attr('y2', Y(lat)).attr('stroke', 'var(--cds-chart-grid)'); svg.append('text').attr('x', W - 4).attr('y', Y(lat) - 3).attr('text-anchor', 'end').attr('font-size', 10).attr('fill', 'var(--color-fg-muted)').text(Math.abs(lat) + '°S'); }
+    for (let lon = -35; lon <= -32; lon += 1) { svg.append('line').attr('y1', 0).attr('y2', H).attr('x1', X(lon)).attr('x2', X(lon)).attr('stroke', 'var(--cds-chart-grid)'); svg.append('text').attr('x', X(lon) + 3).attr('y', H - 4).attr('font-size', 10).attr('fill', 'var(--color-fg-muted)').text(Math.abs(lon) + '°O'); }
+    const line = d3.line().x((p) => X(p[1])).y((p) => Y(p[0]));
+    svg.append('path').attr('d', line(COAST) + 'Z').attr('fill', 'var(--color-panel)').attr('stroke', 'var(--am-green)').attr('stroke-width', 1.5);
+    svg.append('text').attr('x', X(-35.55)).attr('y', Y(-6.6)).attr('font-size', 11).attr('letter-spacing', '.12em').attr('fill', 'var(--color-fg-muted)').text('RN');
+    svg.append('text').attr('x', X(-35.55)).attr('y', Y(-7.25)).attr('font-size', 11).attr('letter-spacing', '.12em').attr('fill', 'var(--color-fg-muted)').text('PB');
+    svg.append('text').attr('x', X(-35.55)).attr('y', Y(-8.0)).attr('font-size', 11).attr('letter-spacing', '.12em').attr('fill', 'var(--color-fg-muted)').text('PE');
+    svg.append('text').attr('x', X(-33.4)).attr('y', Y(-6.9)).attr('font-size', 12).attr('font-style', 'italic').attr('letter-spacing', '.2em').attr('fill', 'var(--color-fg-muted)').text(W < 420 ? 'ATLÂNTICO' : 'OCEANO ATLÂNTICO');
+    const nav = rs.filter((r) => r.situacao === 'Navegando');
+    const portOf = (o) => PORTOS.find((p) => p.n.includes(o)) || null;
+    PORTOS.forEach((p) => {
+      const active = nav.some((r) => portOf(r.origem) === p);
+      const anyAM = nav.some((r) => portOf(r.origem) === p && am.isAM(r));
+      const l = svg.append('line').attr('x1', X(p.lon)).attr('y1', Y(p.lat)).attr('x2', X(NOR.lon) - 8).attr('y2', Y(NOR.lat) + 6).attr('stroke-width', active ? 2.5 : 1.5);
+      if (active) l.attr('stroke', anyAM ? 'var(--am-orange)' : 'var(--am-nav)').attr('stroke-dasharray', '8 5').attr('marker-end', anyAM ? 'url(#am-arrow-am)' : 'url(#am-arrow)');
+      else l.attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 5');
+      const mx = (X(p.lon) + X(NOR.lon)) / 2, my = (Y(p.lat) + Y(NOR.lat)) / 2;
+      svg.append('text').attr('x', mx + 6).attr('y', my - 6).attr('font-size', 10).attr('fill', 'var(--color-fg-muted)').text('≈ ' + km(p, NOR) + ' km');
+    });
+    svg.append('path').attr('d', line(ILHA) + 'Z').attr('fill', 'var(--color-panel)').attr('stroke', 'var(--am-green)').attr('stroke-width', 1.5);
+    [...PORTOS, NOR].forEach((p) => {
+      svg.append('circle').attr('cx', X(p.lon)).attr('cy', Y(p.lat)).attr('r', 5).attr('fill', 'var(--am-green)').attr('stroke', 'var(--color-panel)').attr('stroke-width', 2);
+      svg.append('text').attr('x', X(p.lon) - 9).attr('y', Y(p.lat) + 4).attr('text-anchor', 'end').attr('font-size', fs).attr('font-weight', 700).attr('fill', 'var(--color-fg)').text(p === NOR ? 'Noronha' : p.n.replace('Porto do ', '').replace('Porto de ', ''));
+    });
+    const nIlha = rs.filter((r) => r.situacao === 'Atracado').length, nFun = rs.filter((r) => r.situacao === 'Fundeio').length;
+    svg.append('text').attr('x', X(NOR.lon) - 9).attr('y', Y(NOR.lat) + 22).attr('text-anchor', 'end').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text(nIlha + ' no cais · ' + nFun + ' no fundeio');
+    const hover = hoverTip(box);
+    // fichas de quem está navegando, junto ao porto de origem
+    PORTOS.forEach((p) => {
+      const list = nav.filter((r) => portOf(r.origem) === p);
+      list.forEach((r, i) => {
+        const g = svg.append('g').datum(r).style('cursor', 'default');
+        const t1 = r.embarcacao, t2 = 'saiu há ' + am.h(r.horas_na_situacao) + (r.previsao ? ' · chega ~' + am.dts(r.previsao) : '');
+        const w = Math.max(am.measure(svg, t1, fs + 1), am.measure(svg, t2, fs - 1)) + 28 + (am.isAM(r) ? 26 : 0);
+        const tx = Math.max(4, Math.min(X(p.lon) + 16, W - w - 4)), ty = Y(p.lat) - 34 - i * 40;
+        g.append('rect').attr('x', tx).attr('y', ty - 2).attr('width', w).attr('height', 34).attr('rx', 6).attr('fill', 'var(--color-panel)').attr('stroke', am.isAM(r) ? 'var(--am-orange)' : 'var(--am-nav)').attr('stroke-width', 1.5);
+        g.append('circle').attr('cx', tx + 11).attr('cy', ty + 15).attr('r', 5).attr('fill', 'var(--am-nav)');
+        g.append('text').attr('x', tx + 22).attr('y', ty + 12).attr('font-size', fs + 1).attr('font-weight', 700).attr('fill', 'var(--color-fg)').text(t1);
+        if (am.isAM(r)) { const bx = tx + 26 + am.measure(svg, t1, fs + 1); g.append('rect').attr('x', bx).attr('y', ty + 2).attr('width', 22).attr('height', 13).attr('rx', 3).attr('fill', 'var(--am-orange)'); g.append('text').attr('x', bx + 11).attr('y', ty + 12).attr('text-anchor', 'middle').attr('font-size', 9).attr('font-weight', 700).attr('fill', '#fff').text('AM'); }
+        g.append('text').attr('x', tx + 22).attr('y', ty + 26).attr('font-size', fs - 1).attr('fill', r.alerta ? 'var(--color-bad)' : 'var(--color-fg-muted)').text(t2);
+        g.append('line').attr('x1', X(p.lon) + 4).attr('y1', Y(p.lat) - 4).attr('x2', tx).attr('y2', ty + 15).attr('stroke', 'var(--am-nav)').attr('stroke-width', 1);
+        hover(g);
+      });
+    });
+    // posições reais de GPS (AIS), quando o coletor estiver ligado
+    const pa = dash.data('posicoes_ais');
+    if (pa.status === 'ok') {
+      const tipA = am.tip(box);
+      const g = am.grupo();
+      const pts = pa.data.filter((r) => r.idade_h <= 24 && (g === 'todas' || am.isAM(r)) && r.lon >= E.lon0 && r.lon <= E.lon1 && r.lat <= E.lat0 && r.lat >= E.lat1 && r.local !== 'Fernando de Noronha');
+      pts.forEach((r, i) => {
+        const x = X(r.lon), y = Y(r.lat);
+        const gg = svg.append('g').datum(r);
+        gg.append('path').attr('d', `M${x},${y - 8} L${x + 7},${y} L${x},${y + 8} L${x - 7},${y} Z`).attr('fill', am.isAM(r) ? 'var(--am-orange)' : 'var(--am-nav)').attr('stroke', 'var(--color-panel)').attr('stroke-width', 1.5);
+        const right = x < W * 0.62;
+        gg.append('text').attr('x', x + (right ? 11 : -11)).attr('y', y + 4 + (i % 2 ? 12 : 0)).attr('text-anchor', right ? 'start' : 'end').attr('font-size', fs - 1).attr('font-weight', 600).attr('fill', 'var(--color-fg)').text(r.embarcacao + ' · GPS ' + am.dts(r.quando));
+        gg.on('mousemove', (ev) => { const [mx, my] = d3.pointer(ev, box); am.showTip(box, tipA, [[r.embarcacao + ' · posição GPS (AIS)'], ['Local', r.local], ['Horário', am.dt(r.quando) + ' (há ' + am.h(r.idade_h) + ')'], ['Velocidade', r.velocidade_nos == null ? '—' : String(r.velocidade_nos).replace('.', ',') + ' nós'], ['Situação AIS', r.status_ais], ['Destino declarado', r.destino_ais || '—']], mx, my); }).on('mouseleave', () => { tipA.hidden = true; });
+      });
+    }
+    const semPorto = nav.filter((r) => !portOf(r.origem));
+    semPorto.forEach((r, i) => { svg.append('text').datum(r).attr('x', 8).attr('y', 18 + i * 16).attr('font-size', fs).attr('fill', 'var(--color-fg)').text(r.embarcacao + ' · navegando, origem não informada').call(hover); });
+  };
+
+  const porto = () => {
+    const box = document.getElementById('porto');
+    const s = dash.data('situacao_atual');
+    if (s.status !== 'ok') { am.fail(box, s.status); return; }
+    if (window.amPage !== 'visao') return;
+    box.classList.remove('dash-skeleton');
+    const rs = rowsNow();
+    const W = box.clientWidth || 360, fs = W < 420 ? 10 : 11.5;
+    const atr = rs.filter((r) => r.situacao === 'Atracado'), fun = rs.filter((r) => r.situacao === 'Fundeio'), nav = rs.filter((r) => r.situacao === 'Navegando');
+    const rowH = 36;
+    const yIsland = 14, hIsland = 92;
+    const yCais = yIsland + hIsland + 10;
+    const yFun = yCais + 30 + Math.max(1, atr.length) * rowH + 22;
+    const funH = Math.max(1, fun.length) * rowH + 36;
+    const yNav = yFun + funH + 22;
+    const H = yNav + 22 + Math.max(1, nav.length) * 18 + 8;
+    box.style.minHeight = H + 'px';
+    box.querySelectorAll('svg').forEach((n) => n.remove());
+    const svg = d3.select(box).insert('svg', ':first-child').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Esquema do porto de Santo Antônio em Fernando de Noronha');
+    svg.append('rect').attr('width', W).attr('height', H).attr('rx', 6).attr('fill', 'var(--am-green-soft)').attr('opacity', 0.35);
+    const hover = hoverTip(box);
+    // ilha estilizada (contorno real simplificado, ampliado)
+    const lons = ILHA.map((p) => p[1]), lats = ILHA.map((p) => p[0]);
+    const x0 = Math.min(...lons), x1 = Math.max(...lons), y0 = Math.max(...lats), y1 = Math.min(...lats);
+    const iw = W * 0.62, kx = iw / (x1 - x0), ky = Math.min(hIsland / (y0 - y1), kx * 1.6);
+    const IX = (lon) => 10 + (lon - x0) * kx, IY = (lat) => yIsland + (y0 - lat) * ky;
+    svg.append('path').attr('d', d3.line().curve(d3.curveCatmullRomClosed).x((p) => IX(p[1])).y((p) => IY(p[0]))(ILHA)).attr('fill', 'var(--color-panel)').attr('stroke', 'var(--am-green)').attr('stroke-width', 1.5);
+    svg.append('text').attr('x', IX(-32.44)).attr('y', IY(-3.845) + 4).attr('text-anchor', 'middle').attr('font-size', fs).attr('font-style', 'italic').attr('fill', 'var(--color-fg-muted)').text('Fernando de Noronha');
+    const px = IX(NOR.lon), py = IY(NOR.lat);
+    svg.append('circle').attr('cx', px).attr('cy', py).attr('r', 5).attr('fill', 'var(--am-green)');
+    // cais
+    const cx = Math.min(W * 0.66, px + 30);
+    svg.append('path').attr('d', `M${px},${py} L${cx},${yCais}`).attr('stroke', 'var(--am-green)').attr('stroke-width', 1).attr('fill', 'none');
+    svg.append('rect').attr('x', 10).attr('y', yCais).attr('width', W - 20).attr('height', 6).attr('rx', 3).attr('fill', 'var(--am-green)');
+    svg.append('text').attr('x', 10).attr('y', yCais + 22).attr('font-size', fs).attr('font-weight', 700).attr('fill', 'var(--color-fg)').text(am.fit(svg, 'Cais · Porto de Santo Antônio', fs, W - 20));
+    const item = (r, x, y, dotColor) => {
+      const g = svg.append('g').datum(r);
+      g.append('rect').attr('x', x).attr('y', y).attr('width', W - x - 10).attr('height', rowH - 6).attr('rx', 5).attr('fill', 'var(--color-panel)').attr('stroke', am.isAM(r) ? 'var(--am-orange)' : 'var(--color-border-line)').attr('stroke-width', am.isAM(r) ? 1.5 : 1);
+      g.append('circle').attr('cx', x + 12).attr('cy', y + (rowH - 6) / 2).attr('r', 5).attr('fill', dotColor);
+      g.append('text').attr('x', x + 24).attr('y', y + 13).attr('font-size', fs).attr('font-weight', 700).attr('fill', 'var(--color-fg)').text(am.fit(svg, r.embarcacao + (am.isAM(r) ? '  · AM' : ''), fs, W - x - 40));
+      const ev = r.situacao === 'Atracado' ? 'desatraca' : 'atraca';
+      const t2 = (r.situacao === 'Atracado' ? 'no cais' : 'esperando') + ' há ' + am.h(r.horas_na_situacao) + ' · ' + (r.previsao ? ev + ' ~' + am.dts(r.previsao) + (r.previsao_tipo === 'Estimativa' ? ' (estim.)' : ' (progr.)') : 'sem estimativa');
+      g.append('text').attr('x', x + 24).attr('y', y + 26).attr('font-size', fs - 1).attr('fill', r.alerta ? 'var(--color-bad)' : 'var(--color-fg-muted)').text(am.fit(svg, t2, fs - 1, W - x - 40));
+      hover(g);
+    };
+    if (!atr.length) svg.append('text').attr('x', 18).attr('y', yCais + 44).attr('font-size', fs).attr('fill', 'var(--color-fg-muted)').text('Cais livre');
+    atr.forEach((r, i) => item(r, 10, yCais + 30 + i * rowH, 'var(--am-green)'));
+    // fundeio
+    svg.append('rect').attr('x', 10).attr('y', yFun).attr('width', W - 20).attr('height', funH).attr('rx', 18).attr('fill', 'none').attr('stroke', 'var(--color-warn)').attr('stroke-dasharray', '6 5').attr('stroke-width', 1.5);
+    svg.append('text').attr('x', 24).attr('y', yFun + 20).attr('font-size', fs).attr('font-weight', 700).attr('fill', 'var(--color-fg)').text(am.fit(svg, 'Área de fundeio (fila para atracar)', fs, W - 40));
+    if (!fun.length) svg.append('text').attr('x', 24).attr('y', yFun + 44).attr('font-size', fs).attr('fill', 'var(--color-fg-muted)').text('Ninguém esperando');
+    [...fun].sort((a, b) => (a.desde < b.desde ? -1 : 1)).forEach((r, i) => item(r, 20, yFun + 30 + i * rowH, 'var(--color-warn)'));
+    // chegando
+    svg.append('text').attr('x', 10).attr('y', yNav + 4).attr('font-size', fs).attr('font-weight', 700).attr('fill', 'var(--color-fg)').text('↑ Chegando do continente');
+    if (!nav.length) svg.append('text').attr('x', 10).attr('y', yNav + 22).attr('font-size', fs).attr('fill', 'var(--color-fg-muted)').text('Nenhum barco em travessia');
+    nav.forEach((r, i) => svg.append('text').datum(r).attr('x', 10).attr('y', yNav + 22 + i * 18).attr('font-size', fs).attr('fill', am.isAM(r) ? 'var(--am-orange)' : 'var(--color-fg)').attr('font-weight', am.isAM(r) ? 700 : 400).text(am.fit(svg, r.embarcacao + ' · ' + (r.previsao ? 'chega ~' + am.dts(r.previsao) : 'sem estimativa de chegada'), fs, W - 20)).call(hover));
+  };
+
+  const fila = () => {
+    const box = document.getElementById('chart-fila');
+    const s = dash.data('fila_diaria');
+    if (s.status !== 'ok') { am.fail(box, s.status); return; }
+    if (window.amPage !== 'visao') return;
+    box.classList.remove('dash-skeleton');
+    const rows = s.data.slice(-120);
+    const W = box.clientWidth || 400, H = 230;
+    box.querySelectorAll('svg').forEach((n) => n.remove());
+    const svg = d3.select(box).insert('svg', ':first-child').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const maxV = Math.max(4, d3.max(rows, (r) => Number(r.fundeio)));
+    const y = d3.scaleLinear([0, maxV], [H - 24, 8]).nice();
+    const yt = y.ticks(Math.min(5, maxV));
+    const ml = am.measure(svg, String(d3.max(yt)), 11) + 10;
+    const x = d3.scaleBand(rows.map((r) => r.dia), [ml, W - 4]).padding(0.2);
+    yt.forEach((t) => { svg.append('line').attr('x1', ml).attr('x2', W - 4).attr('y1', y(t)).attr('y2', y(t)).attr('stroke', 'var(--cds-chart-grid)'); svg.append('text').attr('x', ml - 6).attr('y', y(t) + 4).attr('text-anchor', 'end').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text(t); });
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.dia)).attr('width', x.bandwidth()).attr('y', (r) => y(Number(r.fundeio))).attr('height', (r) => y(0) - y(Number(r.fundeio))).attr('rx', Math.min(2, x.bandwidth() / 2)).attr('fill', (r, i) => (i === rows.length - 1 ? 'var(--am-orange)' : 'var(--am-green)')).attr('opacity', (r, i) => (i === rows.length - 1 ? 1 : 0.75));
+    let lastM = '', lastX = -1e9;
+    rows.forEach((r) => { const m = r.dia.slice(0, 7); if (m === lastM) return; lastM = m; const xx = x(r.dia); if (xx - lastX < 44 || xx > W - 40) return; lastX = xx; svg.append('text').attr('x', xx).attr('y', H - 6).attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text(am.mes(r.dia)); });
+    const tip = am.tip(box);
+    svg.append('rect').attr('x', ml).attr('width', W - ml).attr('height', H).attr('fill', 'transparent')
+      .on('mousemove', (ev) => { const [mx] = d3.pointer(ev); const r = rows[Math.max(0, Math.min(rows.length - 1, Math.floor((mx - ml) / x.step())))]; const [bx, by] = d3.pointer(ev, box); am.showTip(box, tip, [[am.day(r.dia)], ['No fundeio', r.fundeio], ['Navegando', r.navegando], ['Atracados', r.atracado]], bx, by); })
+      .on('mouseleave', () => { tip.hidden = true; });
+  };
+
+  const registros = () => {
+    const tb = document.querySelector('#tab-registros tbody');
+    const s = dash.data('registros');
+    if (s.status !== 'ok') { tb.replaceChildren(); return; }
+    const g = am.grupo();
+    const rs = s.data.filter((r) => g === 'todas' || am.isAM(r));
+    if (!rs.length) { const tr = document.createElement('tr'); const td = am.el('td', 'am-empty', 'Nenhum registro da equipe nos últimos 60 dias. '); td.colSpan = 4; tr.append(td); tb.replaceChildren(tr); return; }
+    tb.replaceChildren(...rs.map((r) => { const tr = document.createElement('tr'); tr.dataset.key = r.id; tr.append(am.el('td', '', am.dts(r.quando))); am.nameCell(tr, r); const ev = am.el('td', '', r.tipo); if (r.origem) ev.append(am.el('span', 'am-sub', 'de ' + r.origem)); tr.append(ev, am.el('td', '', r.observacao || '')); return tr; }));
+  };
+  const aisTab = () => {
+    const tb = document.querySelector('#tab-ais tbody');
+    const s = dash.data('posicoes_ais');
+    if (s.status !== 'ok') { tb.replaceChildren(); return; }
+    const g = am.grupo();
+    const rs = s.data.filter((r) => g === 'todas' || am.isAM(r));
+    if (!rs.length) { const tr = document.createElement('tr'); const td = am.el('td', 'am-empty', 'O coletor de GPS ainda não enviou posições. O passo a passo para ligá-lo está com a administração.'); td.colSpan = 5; tr.append(td); tb.replaceChildren(tr); return; }
+    tb.replaceChildren(...rs.map((r) => { const tr = document.createElement('tr'); am.nameCell(tr, r); const q = am.el('td', '', am.dts(r.quando)); q.append(am.el('span', 'am-sub', 'há ' + am.h(r.idade_h))); tr.append(am.el('td', '', r.local), q, am.el('td', 'num', r.velocidade_nos == null ? '—' : String(r.velocidade_nos).replace('.', ',') + ' nós'), am.el('td', '', r.status_ais)); return tr; }));
+  };
+  window.amVisao = () => { header(); manobras(); proximos(); travessias(); mapa(); porto(); aisTab(); registros(); fila(); };
+})();
+</script>
+
+<script>
+/* ======================= DESEMPENHO + PROGRAMAÇÃO ======================= */
+(() => {
+  document.querySelectorAll('#desempenho .am-seg button').forEach((b) => b.addEventListener('click', () => dash.setParams({ periodo: b.dataset.p })));
+  let sortKey = 'viagens', sortDir = -1;
+  document.querySelectorAll('#tab-frota th button').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.sort; if (sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = k === 'embarcacao' ? 1 : -1; } frota(); }));
+  document.querySelector('#tab-frota tbody').addEventListener('click', (ev) => { const tr = ev.target.closest('tr[data-key]'); if (tr && ev.target.closest('td.name')) { dash.setParams({ barco: decodeURIComponent(tr.dataset.key.split(',')[1]) }); window.amShow('barco'); } });
+  const BETTER = { d_viagens: 1, d_travessia: -1, d_espera: -1, d_atracado: -1, d_permanencia: -1, d_fila: -1, d_acerto: 1, d_pontualidade: 1 };
+  const LBL = { todas: 'Toda a rota', alemmar: 'Frota Além Mar', outras: 'Outras operadoras' };
+  const fmtVal = (f, v) => {
+    if (f === 'viagens' || f === 'prog_alteradas') return v == null ? '—' : String(v);
+    if (f === 'fila_media') return v == null ? 'Dados insuficientes' : String(v).replace('.', ',') + ' barcos';
+    if (f === 'acerto_previsao' || f === 'pontualidade') return v == null ? 'Dados insuficientes' : am.pct(v);
+    if (f === 'desvio_prog_mediano') return v == null ? 'Dados insuficientes' : (v > 0 ? '+' : '') + am.h(v);
+    if (f.startsWith('n_')) return v == null ? '' : ({ n_trav: 'Base: ' + v + ' travessias', n_esp: 'Base: ' + v + ' esperas', n_atr: 'Base: ' + v + ' operações', n_prev: 'Base: ' + v + ' viagens testadas', n_prog: 'Base: ' + v + ' manobras com horário real' })[f];
+    return v == null ? 'Dados insuficientes' : am.h(v);
+  };
+  const fmtDelta = (f, v, p) => {
+    if (p === 'tudo') return ['Sem período anterior', 'am-neutral'];
+    if (v == null) return ['', 'am-neutral'];
+    const pct = f === 'd_acerto' || f === 'd_pontualidade';
+    const abs = Math.abs(v);
+    const txt = (v > 0 ? '+' : v < 0 ? '−' : '±') + (pct ? Math.round(abs * 100) + ' p.p.' : f === 'd_viagens' ? abs : f === 'd_fila' ? String(abs).replace('.', ',') : am.h(abs)) + (p === 'ano' ? ' vs mesmo período de ' + (new Date().getFullYear() - 1) : ' vs período anterior');
+    return [txt, v === 0 ? 'am-neutral' : v * BETTER[f] > 0 ? 'am-good' : 'am-bad'];
+  };
+  const kpiRow = () => { const s = dash.data('kpi'); return s.status === 'ok' ? s.data.find((r) => r.periodo === am.periodo() && r.grupo === am.grupo()) : null; };
+
+  const kpis = () => {
+    const p = am.periodo(), g = am.grupo();
+    document.querySelectorAll('#desempenho .am-seg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.p === p)));
+    const row = kpiRow();
+    document.getElementById('periodo-nota').textContent = row ? (LBL[g] + ', ' + am.PER[p] + ' (' + am.day(row.de === '0000-00-00' ? '2023-10-25' : row.de) + ' a ' + am.day(row.ate) + '). Contado até o último boletim.') : '—';
+    document.getElementById('prog-periodo').textContent = am.PER[p] + ', ' + LBL[g].toLowerCase();
+    document.querySelectorAll('[data-source="kpi"]:not(table)').forEach((el) => {
+      el.setAttribute('data-where', 'periodo=' + p + '&grupo=' + g);
+      const f = el.dataset.field;
+      if (!row) { el.textContent = '—'; return; }
+      if (f.startsWith('d_')) { const [t, c] = fmtDelta(f, row[f], p); el.textContent = t; el.className = 'dlt ' + c; }
+      else el.textContent = fmtVal(f, row[f]);
+    });
+  };
+
+  const comp = () => {
+    const tb = document.querySelector('#tab-comp tbody');
+    const s = dash.data('kpi');
+    if (s.status !== 'ok') { tb.replaceChildren(); return; }
+    const p = am.periodo();
+    tb.replaceChildren(...['alemmar', 'outras', 'todas'].map((g) => {
+      const r = s.data.find((x) => x.periodo === p && x.grupo === g) || {};
+      const tr = document.createElement('tr'); tr.dataset.key = encodeURIComponent(p) + ',' + encodeURIComponent(g);
+      if (g === 'alemmar') tr.classList.add('am-row-am');
+      const nm = am.el('td', 'name', LBL[g]); if (g === 'alemmar') nm.append(am.el('span', 'am-badge', 'AM')); tr.append(nm);
+      ['viagens', 'travessia_mediana', 'espera_mediana', 'atracado_mediano', 'permanencia_mediana', 'acerto_previsao', 'pontualidade'].forEach((f) => { const v = r[f]; tr.append(am.el('td', 'num', v == null ? '—' : f === 'viagens' ? String(v) : f === 'acerto_previsao' || f === 'pontualidade' ? am.pct(v) : am.h(v))); });
+      return tr;
+    }));
+  };
+
+  const frota = () => {
+    const tb = document.querySelector('#tab-frota tbody');
+    const s = dash.data('frota_kpi');
+    if (s.status !== 'ok') { tb.replaceChildren(); return; }
+    const p = am.periodo(), g = am.grupo();
+    const rows = s.data.filter((r) => r.periodo === p && r.viagens > 0 && (g === 'todas' || am.isAM(r))).sort((a, b) => { const va = a[sortKey], vb = b[sortKey]; if (va == null) return 1; if (vb == null) return -1; return (typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb))) * sortDir; });
+    document.querySelectorAll('#tab-frota th').forEach((th) => { const b = th.querySelector('button'); th.setAttribute('aria-sort', b && b.dataset.sort === sortKey ? (sortDir > 0 ? 'ascending' : 'descending') : 'none'); });
+    tb.replaceChildren(...rows.map((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = encodeURIComponent(r.periodo) + ',' + encodeURIComponent(r.embarcacao);
+      const td = am.nameCell(tr, r); td.style.cursor = 'pointer';
+      [String(r.viagens), am.h(r.travessia_mediana), am.h(r.espera_mediana), am.h(r.atracado_mediano), am.dias(r.intervalo_mediano_dias), am.pct(r.acerto_previsao)].forEach((t) => tr.append(am.el('td', 'num', t || '—')));
+      tr.append(am.el('td', '', am.dts(r.ultima_chegada)));
+      return tr;
+    }));
+    if (!rows.length) { const tr = document.createElement('tr'); const c = am.el('td', 'am-empty', 'Nenhuma viagem no período.'); c.colSpan = 8; tr.append(c); tb.replaceChildren(tr); }
+  };
+
+  const mensal = (id, kind) => {
+    const box = document.getElementById(id);
+    const s = dash.data('mensal');
+    if (s.status !== 'ok') { am.fail(box, s.status); return; }
+    if (window.amPage !== 'desempenho') return;
+    box.classList.remove('dash-skeleton');
+    const rows = s.data.slice(-24).filter((r) => kind === 'viagens' || r.espera_mediana != null);
+    const W = box.clientWidth || 400, H = 230;
+    box.querySelectorAll('svg').forEach((n) => n.remove());
+    const svg = d3.select(box).insert('svg', ':first-child').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const val = (r) => (kind === 'viagens' ? r.viagens_total : r.espera_mediana);
+    const fmt = (v) => (kind === 'viagens' ? String(v) : am.h(v) || '0 h');
+    const y = d3.scaleLinear([0, d3.max(rows, val) || 1], [H - 24, 10]).nice();
+    const yt = y.ticks(4);
+    const ml = Math.max(...yt.map((t) => am.measure(svg, fmt(t), 11))) + 10;
+    const x = d3.scaleBand(rows.map((r) => r.mes), [ml, W - 4]).padding(0.25);
+    yt.forEach((t) => { svg.append('line').attr('x1', ml).attr('x2', W - 4).attr('y1', y(t)).attr('y2', y(t)).attr('stroke', 'var(--cds-chart-grid)'); svg.append('text').attr('x', ml - 6).attr('y', y(t) + 4).attr('text-anchor', 'end').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text(fmt(t)); });
+    const bw = Math.min(32, x.bandwidth()), off = (x.bandwidth() - bw) / 2;
+    if (kind === 'viagens') {
+      svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.mes) + off).attr('width', bw).attr('y', (r) => y(r.viagens_total)).attr('height', (r) => y(0) - y(r.viagens_total)).attr('rx', 3).attr('fill', 'var(--cds-chart-muted)');
+      svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.mes) + off).attr('width', bw).attr('y', (r) => y(r.viagens_alemmar)).attr('height', (r) => y(0) - y(r.viagens_alemmar)).attr('rx', 3).attr('fill', 'var(--am-green)');
+    } else {
+      const ln = d3.line().x((r) => x(r.mes) + x.bandwidth() / 2).y((r) => y(r.espera_mediana));
+      svg.append('path').attr('d', ln(rows)).attr('fill', 'none').attr('stroke', 'var(--am-orange)').attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+      const lr = rows[rows.length - 1];
+      if (lr) svg.append('circle').attr('cx', x(lr.mes) + x.bandwidth() / 2).attr('cy', y(lr.espera_mediana)).attr('r', 4).attr('fill', 'var(--am-orange)');
+    }
+    const every = Math.ceil(rows.length / Math.max(1, Math.floor((W - ml) / 52)));
+    rows.forEach((r, i) => { if ((rows.length - 1 - i) % every) return; am.xlabel(svg, x(r.mes) + x.bandwidth() / 2, H - 6, am.mes(r.mes), ml, W - 2); });
+    const tip = am.tip(box);
+    svg.append('rect').attr('x', ml).attr('width', W - ml).attr('height', H).attr('fill', 'transparent')
+      .on('mousemove', (ev) => { const [mx] = d3.pointer(ev); const r = rows[Math.max(0, Math.min(rows.length - 1, Math.floor((mx - ml) / x.step())))]; const [bx, by] = d3.pointer(ev, box); am.showTip(box, tip, kind === 'viagens' ? [[am.mes(r.mes)], ['Total', r.viagens_total], ['Além Mar', r.viagens_alemmar], ['Outras', r.viagens_outras]] : [[am.mes(r.mes)], ['Espera mediana', am.h(r.espera_mediana)]], bx, by); })
+      .on('mouseleave', () => { tip.hidden = true; });
+  };
+
+  // Programação
+  let pj = 14;
+  document.querySelectorAll('#card-prog .am-seg button').forEach((b) => b.addEventListener('click', () => { pj = Number(b.dataset.pj); document.querySelectorAll('#card-prog .am-seg button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); prog(); }));
+  document.getElementById('busca-prog').addEventListener('input', () => prog());
+  const prog = () => {
+    const tb = document.querySelector('#tab-prog tbody');
+    const s = dash.data('programacao');
+    if (s.status !== 'ok') { tb.replaceChildren(); return; }
+    if (window.amPage !== 'programacao' && tb.children.length) return;
+    const g = am.grupo(), q = document.getElementById('busca-prog').value.trim().toLowerCase();
+    const lastDay = s.data.reduce((m, r) => (r.dia > m ? r.dia : m), '');
+    const d0 = new Date(lastDay + 'T00:00:00Z'); d0.setUTCDate(d0.getUTCDate() - pj); const from = d0.toISOString().slice(0, 10);
+    const rows = s.data.filter((r) => r.dia > from && (g === 'todas' || am.isAM(r)) && (!q || r.embarcacao.toLowerCase().includes(q))).sort((a, b) => (a.programado < b.programado ? 1 : -1));
+    tb.replaceChildren(...rows.map((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.id;
+      tr.append(am.el('td', '', am.day(r.dia)), am.el('td', '', r.tipo));
+      am.nameCell(tr, r);
+      const pg = am.el('td', '', am.dts(r.programado)); if (r.programado_por === 'Registro da equipe') pg.append(am.el('span', 'am-sub', 'pela equipe')); tr.append(pg);
+      const re = am.el('td', '', r.realizado ? am.dts(r.realizado) : '—'); if (r.realizado_fonte === 'Estimada pelos boletins') re.append(am.el('span', 'am-sub', 'estimado')); tr.append(re);
+      const dv = am.el('td', 'num', r.desvio_h == null ? '' : (r.desvio_h > 0 ? '+' : '') + am.h(r.desvio_h)); if (r.desvio_h != null && Math.abs(r.desvio_h) > 1) dv.classList.add(r.desvio_h > 0 ? 'am-bad' : 'am-neutral'); tr.append(dv);
+      tr.append(am.el('td', 'num', r.alteracoes ? String(r.alteracoes) : ''));
+      const st = am.el('td'); st.append(am.el('span', 'am-pill ' + (r.situacao === 'Realizado' ? 'ok' : r.situacao === 'Previsto' ? 'prog' : 'none'), r.situacao)); tr.append(st);
+      return tr;
+    }));
+  };
+
+  window.amDesempenho = () => { kpis(); comp(); frota(); mensal('chart-mensal', 'viagens'); mensal('chart-espera', 'espera'); prog(); };
+})();
+</script>
+
+<script>
+/* ======================= POR EMBARCAÇÃO, VIAGENS, CADASTRO ======================= */
+(() => {
+  const sel = document.getElementById('sel-barco');
+  sel.addEventListener('change', () => dash.setParams({ barco: sel.value }));
+  const barco = () => { const f = dash.data('frota'); const b = dash.params().barco; return f.status === 'ok' && f.data.some((r) => r.embarcacao === b) ? b : 'ALRO'; };
+
+  const pagina = () => {
+    const f = dash.data('frota');
+    if (f.status === 'ok') {
+      const cur = barco();
+      if (sel.options.length !== f.data.length) {
+        const am1 = f.data.filter(am.isAM), out = f.data.filter((r) => !am.isAM(r));
+        const og1 = document.createElement('optgroup'); og1.label = 'Frota Além Mar'; am1.forEach((r) => og1.append(new Option(r.embarcacao, r.embarcacao)));
+        const og2 = document.createElement('optgroup'); og2.label = 'Outras operadoras'; out.forEach((r) => og2.append(new Option(r.embarcacao, r.embarcacao)));
+        sel.replaceChildren(og1, og2);
+      }
+      sel.value = cur;
+      const info = f.data.find((r) => r.embarcacao === cur);
+      const t = document.getElementById('barco-titulo'); t.replaceChildren(document.createTextNode(cur)); if (info && am.isAM(info)) t.append(am.el('span', 'am-badge', 'AM'));
+      document.getElementById('barco-nota').textContent = info ? (info.empresa + ' · sai mais de ' + info.porto_habitual + ' · situação: ' + info.situacao_atual.toLowerCase() + ' · ' + am.PER[am.periodo()] + ' (mude o período na aba Desempenho)') : '';
+    }
+    const k = dash.data('frota_kpi');
+    const row = k.status === 'ok' ? k.data.find((r) => r.periodo === am.periodo() && r.embarcacao === barco()) : null;
+    document.querySelectorAll('#barco-kpis [data-source="frota_kpi"]').forEach((el) => {
+      el.setAttribute('data-where', 'periodo=' + encodeURIComponent(am.periodo()) + '&embarcacao=' + encodeURIComponent(barco()));
+      const fld = el.dataset.field, v = row ? row[fld] : null;
+      el.textContent = !row ? '—' : fld === 'viagens' ? String(v) : v == null ? 'Dados insuficientes' : fld === 'intervalo_mediano_dias' ? am.dias(v) : fld === 'acerto_previsao' ? am.pct(v) : am.h(v);
+    });
+    const v = dash.data('viagens');
+    const box = document.getElementById('chart-barco');
+    const tb = document.querySelector('#tab-barco tbody');
+    if (v.status !== 'ok') { am.fail(box, v.status); tb.replaceChildren(); return; }
+    const mine = v.data.filter((r) => r.embarcacao === barco() && (r.chegada_fundeio || r.atracacao)).sort((a, b) => (a.data_ref < b.data_ref ? -1 : 1));
+    tb.replaceChildren(...[...mine].reverse().map((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.id;
+      [am.day(r.data_ref), r.origem + (r.origem_estimada ? ' (provável)' : ''), am.dt(r.saida_continente)].forEach((t) => tr.append(am.el('td', '', t)));
+      [am.h(r.travessia_h), am.h(r.previsao_travessia_h), am.h(r.espera_fundeio_h), am.h(r.tempo_atracado_h)].forEach((t) => tr.append(am.el('td', 'num', t)));
+      return tr;
+    }));
+    if (window.amPage !== 'barco') return;
+    box.classList.remove('dash-skeleton');
+    box.querySelectorAll('svg, .am-empty').forEach((n) => n.remove());
+    const rows = mine.filter((r) => r.travessia_h != null).slice(-30);
+    if (rows.length < 3) { box.prepend(am.el('p', 'am-empty', 'Dados insuficientes: menos de 3 travessias completas registradas.')); return; }
+    const W = box.clientWidth || 400, H = 230;
+    const svg = d3.select(box).insert('svg', ':first-child').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const y = d3.scaleLinear([0, d3.max(rows, (r) => Math.max(r.travessia_h, r.previsao_travessia_h || 0))], [H - 24, 10]).nice();
+    const yt = y.ticks(4);
+    const ml = Math.max(...yt.map((t) => am.measure(svg, t + ' h', 11))) + 10;
+    const x = d3.scaleBand(rows.map((r) => r.id), [ml, W - 4]).padding(0.25);
+    yt.forEach((t) => { svg.append('line').attr('x1', ml).attr('x2', W - 4).attr('y1', y(t)).attr('y2', y(t)).attr('stroke', 'var(--cds-chart-grid)'); svg.append('text').attr('x', ml - 6).attr('y', y(t) + 4).attr('text-anchor', 'end').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text(t + ' h'); });
+    const bw = Math.min(28, x.bandwidth()), off = (x.bandwidth() - bw) / 2;
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.id) + off).attr('width', bw).attr('y', (r) => y(r.travessia_h)).attr('height', (r) => y(0) - y(r.travessia_h)).attr('rx', 3).attr('fill', 'var(--am-green)').attr('opacity', 0.85);
+    const pts = rows.filter((r) => r.previsao_travessia_h != null);
+    svg.append('path').attr('d', d3.line().x((r) => x(r.id) + x.bandwidth() / 2).y((r) => y(r.previsao_travessia_h))(pts)).attr('fill', 'none').attr('stroke', 'var(--am-orange)').attr('stroke-width', 2).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round');
+    const every = Math.ceil(rows.length / Math.max(1, Math.floor((W - ml) / 56)));
+    rows.forEach((r, i) => { if ((rows.length - 1 - i) % every) return; am.xlabel(svg, x(r.id) + x.bandwidth() / 2, H - 6, r.data_ref.slice(8, 10) + '/' + r.data_ref.slice(5, 7), ml, W - 2); });
+    const tip = am.tip(box);
+    svg.append('rect').attr('x', ml).attr('width', W - ml).attr('height', H).attr('fill', 'transparent')
+      .on('mousemove', (ev) => { const [mx] = d3.pointer(ev); const r = rows[Math.max(0, Math.min(rows.length - 1, Math.floor((mx - ml) / x.step())))]; const [bx, by] = d3.pointer(ev, box); am.showTip(box, tip, [['Chegada ' + am.day(r.data_ref)], ['Travessia', am.h(r.travessia_h)], ['Previsão antes da viagem', r.previsao_travessia_h == null ? '—' : am.h(r.previsao_travessia_h)], ['Origem', r.origem]], bx, by); })
+      .on('mouseleave', () => { tip.hidden = true; });
+  };
+
+  const input = document.getElementById('busca-viagens');
+  input.addEventListener('input', () => viagens(true));
+  const viagens = (force) => {
+    const tb = document.querySelector('#tab-viagens tbody');
+    const s = dash.data('viagens');
+    if (s.status !== 'ok') { tb.replaceChildren(); return; }
+    if (!force && window.amPage !== 'viagens' && tb.children.length) return;
+    const q = input.value.trim().toLowerCase(), g = am.grupo();
+    const frag = document.createDocumentFragment();
+    [...s.data].sort((a, b) => (a.data_ref < b.data_ref ? 1 : -1)).forEach((r) => {
+      if (g === 'alemmar' && !am.isAM(r)) return;
+      const cells = [r.origem + (r.origem_estimada ? ' (provável)' : ''), am.dt(r.saida_continente), r.atracou_direto ? 'atracou direto' : am.dt(r.chegada_fundeio), am.dt(r.atracacao), am.dt(r.desatracacao) + (r.desatracacao_fonte === 'Estimada pelos boletins' ? ' ~' : '')];
+      const nums = [am.h(r.travessia_h), am.h(r.espera_fundeio_h), am.h(r.tempo_atracado_h)];
+      if (q && ![r.embarcacao, ...cells, am.day(r.data_ref)].join(' ').toLowerCase().includes(q)) return;
+      const tr = document.createElement('tr'); tr.dataset.key = r.id;
+      am.nameCell(tr, r);
+      cells.forEach((c) => tr.append(am.el('td', '', c)));
+      nums.forEach((c) => tr.append(am.el('td', 'num', c)));
+      frag.append(tr);
+    });
+    tb.replaceChildren(frag);
+  };
+
+  const cadastro = () => {
+    const tb = document.querySelector('#tab-cadastro tbody');
+    const s = dash.data('frota');
+    if (s.status !== 'ok') { tb.replaceChildren(); return; }
+    tb.replaceChildren(...[...s.data].sort((a, b) => (am.isAM(b) - am.isAM(a)) || a.embarcacao.localeCompare(b.embarcacao)).map((r) => {
+      const tr = document.createElement('tr');
+      am.nameCell(tr, r);
+      [r.empresa, r.nomes_alternativos, r.porto_habitual, r.imo, r.mmsi, r.situacao_atual].forEach((t) => tr.append(am.el('td', '', t)));
+      tr.append(am.el('td', 'num', String(r.viagens_registradas)));
+      return tr;
+    }));
+  };
+
+  window.amOutros = () => { pagina(); viagens(false); cadastro(); };
+})();
+</script>
+
+<script>
+window.amRedraw = () => { window.amVisao(); window.amDesempenho(); window.amOutros(); };
+dash.onData(() => window.amRedraw());
+</script>
+
+<script>
+/* ======================= toque (celular) ======================= */
+(() => {
+  const root = document.querySelector('.am');
+  if (!root) return;
+  const hideTips = () => root.querySelectorAll('.am-tip').forEach((t) => { t.hidden = true; });
+  // Um toque num gráfico ou mapa mostra o mesmo detalhe que o mouse mostra no computador.
+  root.addEventListener('pointerdown', (ev) => {
+    if (ev.pointerType === 'mouse') return;
+    const box = ev.target.closest && ev.target.closest('.am-chart, .am-map');
+    if (!box) { hideTips(); return; }
+    hideTips();
+    ev.target.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, cancelable: true, clientX: ev.clientX, clientY: ev.clientY, view: window }));
+  }, true);
+  window.addEventListener('scroll', () => { if (matchMedia('(hover: none)').matches) hideTips(); }, { passive: true });
+})();
+</script>
+</div><p class="radar-rodape">Página gerada em <span id="radar-gerado">—</span> · atualizada automaticamente a cada 4 horas, das 06:38 às 22:38 (horário de Recife).</p></body></html>
