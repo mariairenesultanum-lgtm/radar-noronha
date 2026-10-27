@@ -1,6 +1,6 @@
 """Monta o Radar Noronha independente.
 Uso: python3 build_site.py <pagina.html do Radar> <pasta saida/ do pipeline> <pasta destino> <agora 'DD/MM/AA HH:MM'> [--embutir]
-Sem --embutir: gera index.html + dados/*.json (para hospedar, ex.: GitHub Pages).
+Sem --embutir: gera index.html + <dataset>.json na raiz da pasta destino (para hospedar, ex.: GitHub Pages).
 Com --embutir: um único radar.html com os dados dentro (para abrir direto no navegador)."""
 import json, sys, os, shutil
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -31,9 +31,11 @@ if emb:
            f'<div id="dash-root">{page}</div>{foot}</body></html>')
     open(f"{dest}/radar.html", "w").write(out)
 else:
-    os.makedirs(f"{dest}/dados", exist_ok=True)
-    for k, v in data.items(): json.dump(v, open(f"{dest}/dados/{k}.json", "w"), ensure_ascii=False)
-    shutil.copy(f"{HERE}/d3.min.js", f"{dest}/d3.min.js")
+    # Tudo na raiz do repositório (o envio pelo site do GitHub achata pastas).
+    for k, v in data.items(): json.dump(v, open(f"{dest}/{k}.json", "w"), ensure_ascii=False)
+    same = os.path.abspath(dest) == HERE
+    if not same:
+        shutil.copy(f"{HERE}/d3.min.js", f"{dest}/d3.min.js")
     open(f"{dest}/radar.css", "w").write(tok); open(f"{dest}/radar-shim.js", "w").write(shim)
     open(f"{dest}/index.html", "w").write(head + '<link rel="stylesheet" href="radar.css"><script src="d3.min.js"></script><script src="radar-shim.js"></script></head><body>'
         f'<div id="dash-root">{page}</div>{foot}</body></html>')

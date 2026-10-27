@@ -43,7 +43,7 @@
     if (window.RADAR_DATA) { setTimeout(function () { setAll(window.RADAR_DATA); }, 0); return; }
     var v = Date.now();
     Promise.all(IDS.concat(['meta']).map(function (id) {
-      return fetch('dados/' + id + '.json?v=' + v, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+      return fetch(id + '.json?v=' + v, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
     })).then(function (arr) { var o = {}; IDS.concat(['meta']).forEach(function (id, i) { o[id] = arr[i]; }); setAll(o); });
   }
   document.addEventListener('DOMContentLoaded', load);
